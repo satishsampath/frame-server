@@ -24,7 +24,27 @@ Frameserver works as a plug-in for various video editing 'host' applications and
   * !MediaStudio Pro SDK: http://www.ulead.com/download/sdk/license.htm - accept the license & in the next page download 'VIO Module'
   * Wax Plug-in SDK: Included in the codebase.
 
-Once downloaded, you can find where to place each SDK's files from the SConscript files for that particular plug-in.
+Once downloaded, place the host SDK files in the following hierarchy:
+{{{
+src/SDKs
+  ├── EditStudio
+  │     ├── Src
+  │     └── Include
+  │           └── ES_Plugin
+  ├── MediaStudioPro
+  │     ├── Include
+  │     └── Lib
+  │          ├── Debug
+  │          └── Release
+  ├── Premiere
+  │     ├── compiler
+  │     └── exporter
+  ├── Vegas
+  │     ├── ffp
+  │     └── fio
+  │          └── libFileIO
+  └── Wax
+}}}
 
 = Steps to build =
 
