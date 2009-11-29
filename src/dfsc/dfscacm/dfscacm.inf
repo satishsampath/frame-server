@@ -1,0 +1,86 @@
+; Install script for the DFSC audio codec
+
+[Version]
+Signature = "$CHICAGO$"
+Class = MEDIA
+
+[SourceDisksNames]
+1="DFSC Install Disk",, 0001
+
+[SourceDisksFiles]
+DFSCACM.inf=1
+dfscacm.dll=1
+
+[Installable.Drivers]
+DFSCacm  = 1:dfscacm.dll, "msacm.DFSCacm", %DisplayNameWin% , , ,
+
+[DefaultInstall]
+CopyFiles  = DFSCACM.Copy,DFSCACM.Copy.Inf
+Updateinis = DFSCACM.Updateini
+;addreg     = DFSCACM.AddReg,DFSCACM.AddReg9x,DFSCACM.DoReg
+addreg     = DFSCACM.AddReg,DFSCACM.AddReg9x
+MediaType  = SOFTWARE
+
+[DefaultInstall.ntx86]
+CopyFiles  = DFSCACM.Copy,DFSCACM.Copy.Inf
+;addreg     = DFSCACM.AddReg,DFSCACM.AddRegNT,DFSCACM.DoReg
+addreg     = DFSCACM.AddReg,DFSCACM.AddRegNT
+MediaType  = SOFTWARE
+
+[Remove_DFSC]
+;AddReg     = DFSCACM.Unregister
+DelReg     = DFSCACM.DelReg
+DelFiles   = DFSCACM.Copy,DFSCACM.Copy.Inf
+UpdateInis = DFSCACM.UpdateIni
+
+[DFSCACM.Copy]
+dfscacm.dll
+
+[DFSCACM.Copy.Inf]
+DFSCACM.inf
+
+[DFSCACM.UpdateIni]
+system.ini, drivers32,,"msacm.DFSCacm=dfscacm.dll"
+
+[DFSCACM.AddReg]
+HKLM, "Software\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.DFSCacm",,"dfscacm.dll"
+HKLM, "Software\Microsoft\Windows NT\CurrentVersion\Drivers.desc","dfscacm.dll",,%DisplayNameWin%
+
+
+[DFSCACM.AddReg9x]
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\msacm\msacm.DFSCacm,Description,,%DisplayNameWin%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\msacm\msacm.DFSCacm,Driver,,dfscacm.dll
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\msacm\msacm.DFSCacm,FriendlyName,,%DisplayNameWin%
+HKLM,%UnInstallPath%,DisplayName,,%DisplayNameWin%
+HKLM,%UnInstallPath%,UninstallString,,"%10%\rundll.exe setupx.dll,InstallHinfSection Remove_DFSC 132 %17%\%InfFile%"
+
+[DFSCACM.AddRegNT]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers32","msacm.DFSCacm",,"dfscacm.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc","dfscacm.dll",,%DisplayNameWin%
+HKLM,%UnInstallPath%,DisplayName,,%DisplayNameWin%
+HKLM,%UnInstallPath%,UninstallString,,"%11%\rundll32.exe setupapi,InstallHinfSection Remove_DFSC 132 %17%\%InfFile%"
+
+;[DFSCACM.DoReg]
+;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"DFSC ACM Codec",,"%11%\regsvr32.exe /s %11%\DFSCCom.acm"
+
+[DFSCACM.DelReg]
+HKLM,"SYSTEM\CurrentControlSet\Control\MediaResources\msacm\msacm.DFSCacm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc","dfscacm.dll",,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers32","msacm.DFSCacm",,""
+HKLM,%UnInstallPath%
+
+;[DFSCACM.Unregister]
+;HKLM,"Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup","DFSC ACM Codec",,"%11%\regsvr32.exe /s /u %11%\DFSCCom.acm"
+
+[DestinationDirs]
+DefaultDestDir   = 11	; LDID_SYS
+DFSCACM.Copy     = 11
+DFSCACM.Copy.Inf = 17
+
+[Strings]
+InfFile="DFSCACM.inf"
+DisplayNameWin="DFSC ACM Codec"
+UnInstallPath="Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSCACM"
+MediaClassName="Media Devices"
+mfgname="Satish"
+

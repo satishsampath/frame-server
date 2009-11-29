@@ -1,0 +1,65 @@
+Import('env')
+Import('env_vc8')
+
+# ---- ImageSequence.dll ----
+is_env = env.Clone()
+
+is_env['CPPDEFINES'] += ['_USRDLL', 'IMAGESEQUENCE_EXPORTS']
+is_env['LIBS'] += ['gdiplus.lib', 'vfw32.lib']
+
+target = 'ImageSequence'
+is_env['PDB'] = target + '.pdb'
+bin = is_env.SharedLibrary(
+  target,
+  [
+    'ImageSequence.cpp',
+  ]
+)
+env.Install('#/src/dist/bin', bin[0])
+
+# ---- fscommon.dll ----
+fc_env = env.Clone()
+
+fc_env['CPPDEFINES'] += ['_USRDLL']
+fc_env['LINKFLAGS'] += ['/noentry']
+
+target = 'fscommon'
+fc_env['PDB'] = target + '.pdb'
+bin = fc_env.SharedLibrary(
+  target,
+  [
+    env.RES('fscommon.rc'),
+  ]
+)
+env.Install('#/src/dist/bin', bin[0])
+
+# ---- common.lib ----
+
+# Build the MBCS version of the library
+cpppath = ['..', '../dfsc', '../utils']
+co_env = env.Clone()
+co_env['CPPPATH'] = cpppath
+co_env.Library(
+  'common',
+  [
+    'autoupdate.cpp',
+    'blankavi.cpp',
+    'fscommon.cpp',
+    '../utils/utils.cpp',
+  ]
+)
+
+# Build the UNICODE version of the library using VC8
+co_uni_env = env_vc8.Clone()
+co_uni_env['CPPPATH'] = cpppath
+co_uni_env['CPPDEFINES'].remove('_MBCS')
+co_uni_env['CPPDEFINES'] += ['UNICODE', '_UNICODE']
+co_uni_env.Library(
+  'common_unicode',
+  [
+    co_uni_env.Object('autoupdate-u', 'autoupdate.cpp'),
+    co_uni_env.Object('blankavi-u', 'blankavi.cpp'),
+    co_uni_env.Object('fscommon-u', 'fscommon.cpp'),
+    co_uni_env.Object('utils-u', '../utils/utils.cpp'),
+  ]
+)

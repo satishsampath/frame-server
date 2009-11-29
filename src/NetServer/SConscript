@@ -1,0 +1,17 @@
+Import('env')
+
+env = env.Clone()
+
+env['CPPDEFINES'] += ['_USRDLL']
+env['CPPPATH'] = ['../sdks/Wax', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'ws2_32.lib']
+
+target = 'DFsNetServer'
+env['PDB'] = target + '.pdb'
+bin = env.Program(
+  target,
+  [
+    'NetServer.cpp',
+  ]
+)
+env.Install('#/src/dist/bin', bin[0])
