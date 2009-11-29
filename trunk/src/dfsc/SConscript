@@ -1,0 +1,6 @@
+SConscript(
+  [
+    'dfscacm/SConscript',
+	'dfscvfw/SConscript',
+  ]
+)

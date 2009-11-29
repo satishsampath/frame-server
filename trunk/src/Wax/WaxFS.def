@@ -1,0 +1,8 @@
+; WaxFS.def : Declares the module parameters for the DLL.
+
+LIBRARY      "dfscWaxOut"
+DESCRIPTION  'Debugmode FrameServer plugin for Wax, Copyright (c) 2005 Satish Kumar. S'
+
+EXPORTS
+    GetFilterCapsEx
+    SetFilterTools

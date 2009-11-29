@@ -1,0 +1,21 @@
+Import('env')
+
+env = env.Clone()
+
+env['CPPDEFINES'] += ['_USRDLL', 'EXPORT_VIO']
+env['CPPPATH'] = ['../sdks/MediaStudioPro/include', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib']
+
+target = 'dfscMSProOut'
+env['PDB'] = target + '.pdb'
+bin = env.SharedLibrary(
+  target,
+  [
+    'EntryPoints.cpp',
+    'MediaStudioProFS.def',
+    'MediaStudioProFS.cpp',
+    'Util.cpp',
+  ],
+  SHLIBSUFFIX = '.vio'
+)
+env.Install('#/src/dist/bin', bin[0])

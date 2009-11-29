@@ -1,0 +1,20 @@
+Import('env')
+
+env = env.Clone()
+
+env['CPPDEFINES'] += ['_USRDLL', 'PRWIN_ENV', 'MSWindows']
+env['RCFLAGS'] += ['/d', 'PRWIN_ENV']
+env['CPPPATH'] = ['../sdks/Premiere/compiler', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib']
+
+target = 'cm-dfscPremiereOut'
+env['PDB'] = target + '.pdb'
+bin = env.SharedLibrary(
+  target,
+  [
+    'PremiereFS.cpp',
+    env.RES('PremiereFS.rc'),
+  ],
+  SHLIBSUFFIX = '.prm'
+)
+env.Install('#/src/dist/bin', bin[0])

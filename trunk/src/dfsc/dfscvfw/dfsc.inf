@@ -1,0 +1,53 @@
+;
+; DebugMode FrameServing Codec
+;
+; Copyright (c) 2003 SATISH KUMAR. S
+; http://www.debugmode.com/
+;
+[version]
+signature="$CHICAGO$"
+
+[DefaultInstall]
+CopyFiles=DFSC.Files.Inf,DFSC.Files.Dll
+AddReg=DFSC.Reg
+UpdateInis=DFSC.INIs
+
+[DefaultUnInstall]
+DelFiles=DFSC.Files.Dll,DFSC.Files.Inf,DFSC.Files.Ini
+DelReg=DFSC.Reg
+UpdateInis=DFSC.INIs.Del
+
+[SourceDisksNames]
+1="DebugMode FrameServer codec","",1
+
+[SourceDisksFiles]
+DFSC.INF=1
+
+[DestinationDirs]
+DFSC.Files.Inf=17
+DFSC.Files.Dll=11
+DFSC.Files.Ini=25
+
+[DFSC.Files.Inf]
+DFSC.INF
+
+[DFSC.Files.Dll]
+DFSC.DLL
+
+[DFSC.Files.Ini]
+DFSC.INI
+
+[DFSC.Reg]
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Description,,"DebugMode FrameServer Codec [DFSC]"
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Driver,,"dfsc.dll"
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,FriendlyName,,"DebugMode FrameServer Codec [DFSC]"
+
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,DisplayName,,"DebugMode FrameServer Codec (Remove Only)"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,UninstallString,,"rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\DFSC.INF"
+
+[DFSC.INIs]
+system.ini, drivers32,, "VIDC.DFSC=dfsc.dll"
+
+[DFSC.INIs.Del]
+system.ini, drivers32, "VIDC.DFSC=dfsc.dll"

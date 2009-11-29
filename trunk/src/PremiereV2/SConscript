@@ -1,0 +1,26 @@
+Import('env_vc8')
+
+env = env_vc8.Clone()
+
+env['CPPDEFINES'].remove('_MBCS')
+env['CPPDEFINES'] += ['_USRDLL', 'PRWIN_ENV', 'MSWindows', 'UNICODE', '_UNICODE']
+env['RCFLAGS'] += ['/d', 'PRWIN_ENV']
+env['CPPPATH'] = ['../sdks/Premiere/exporter', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'].remove('common.lib')
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode.lib']
+
+env['PDB'] = 'dfscPremiereOut.pdb'
+bin = env.SharedLibrary(
+  'dfscPremiereOut',
+  [
+    'PremiereFS.cpp',
+  ],
+  SHLIBSUFFIX = '.prm'
+)
+
+# Add a post-build step to embed the manifest using mt.exe
+# The number at the end of the line indicates the file type (1: EXE; 2:DLL).
+if not env['dbg']:
+  env.AddPostAction(bin,
+    'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
+env.Install('#/src/dist/bin', bin[0])

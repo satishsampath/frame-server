@@ -1,0 +1,18 @@
+Import('env')
+
+env.SConscript(
+  [
+    'dfsc/SConscript',
+    'EditStudio/SConscript',
+    'fscommon/SConscript',
+    'MediaStudioPro/SConscript',
+    'NetClient/SConscript',
+    'NetServer/SConscript',
+    'Premiere/SConscript',
+    'PremiereV2/SConscript',
+    'Vegas/SConscript',
+    'VegasV2/SConscript',
+    'Wax/SConscript',
+    'dist/SConscript',
+  ]
+)

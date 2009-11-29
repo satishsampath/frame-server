@@ -1,0 +1,19 @@
+Import('env')
+
+env = env.Clone()
+
+env['CPPDEFINES'] += ['_USRDLL']
+env['CPPPATH'] = ['../sdks/EditStudio/include', '../sdks/EditStudio/src', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib']
+
+target = 'dfscEditStudioOut'
+env['PDB'] = target + '.pdb'
+bin = env.SharedLibrary(
+  target,
+  [
+    'EditStudioFS.cpp',
+    'EditStudioFS.def',
+  ],
+  SHLIBSUFFIX = '.eds_plgn'
+)
+env.Install('#/src/dist/bin', bin[0])

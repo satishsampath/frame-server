@@ -1,0 +1,105 @@
+Change log
+----------
+
+version 2.7
+-----------
+
+- Added support for Premiere Pro CS4
+
+version 2.6
+-----------
+
+- Added support for Vegas 9.0 and above.
+- Added autoupdate check, frameserver will check for new releases and inform the user when available.
+
+version 2.5
+-----------
+
+- Added option to export video frames as an image sequence.
+
+version 2.3
+-----------
+
+1. Frameserver now works as a plugin with Debugmode Wax!!
+2. Fixed audio length issue in signpost AVI file. If the 'raw PCM audio' option was enabled the signpost AVI file was showing the audio stream to be 4 times longer than actual, causing problems with encoders like TMPGenc. Fixed now.
+
+version 2.2
+-----------
+
+1. Added workaround for bug in Premiere Elements 1.0 API. Frameserver now supports 
+   Premiere Elements too.
+
+version 2.01
+------------
+
+1. Fixed crash when serving from Ulead MSP. This happened when audio was
+   also being served.
+
+version 2.0
+------------
+
+1. Changed name from "PluginPac Frameserver" to "DebugMode FrameServer" due
+   to phasing out of other PluginPac plugins (they have been integrated into
+   the new 'Wax' plugin/app)
+
+2. Added 2 new serving formats (RGB24 & YUY2, YUY2 can be useful if running on
+   PremierePro). Default was RGB32 earlier, and now it is RGB24 so efficiency
+   will be slightly better. Using RGB24 also makes sure in hosts like Premiere
+   where the alpha channel is also given to the plugin, your fades will work
+   fine (the fades only modified alpha so in earlier versions if the target app
+   does not recognize alpha then the fade wont be visible)
+
+3. Streamlined the Frameserver interface and made it into a two step process -
+   first the FS asks for user options and then goes into serving mode.
+
+4. Frameserver now supports a new NLE - Pure Motion EditStudio. Also it has been
+   modified and tested to work with Ulead VideoStudio.
+
+5. Added feature - network frameserving! Just enable a checkbox in the FS options
+   and your video can be accessed over the network. The target machine must have
+   the frameserver installed. For more info about network serving instructions
+   have a look at the README.
+
+6. Added feature - the signpost AVI file (output of the FrameServer) will be deleted
+   when the Frameserver is closed. This was asked by many users, so that they dont 
+   open the file again by mistake to go into an infinite dialog box loop.
+
+version 1.62
+-------------
+1. When choosing the option "save pcm audio in avi", it would take a while
+   for the AVI file to be written. In this time if the "Stop serving" button
+   is clicked this operation would stop and the pcm audio option would be
+   disabled. When the frameserver is run the next time pcm audio would not
+   be written to AVI.
+
+2. Fixed a bug which caused Vegas Frameserver Plugin to crash while serving
+   audio, happened at different times for different audio sampling rate settings.
+   (If PCM audio option was used this crash did not happen).
+
+
+version 1.6
+-------------
+1. Updated Premiere plugin to work with Premiere Pro's new SDK. Other
+   NLE plugins were not modified (except for the version numbers in the 
+   about dialogs).
+
+version 1.5.2
+-------------
+1. Changed the Premiere plugin so users will have to use menu 
+   "File>Export>Movie" in Premiere and choose "PluginPac Frameserver"
+   to frameserve. This way you can serve full project or workarea 
+   only (earlier always full project was served) and you can choose 
+   the frame size to export also.
+
+
+Version 1.5.0
+-------------
+1. Added Premiere plugin for FrameServer
+2. Added MediaStudio Pro plugin for FrameServer
+3. Added stats
+4. Added PCM audio save to signpost feature
+5. optimized for performance
+
+Version 1.4.1
+-------------
+1. First version, only for Vegas/Vegas Video/Video Factory.
