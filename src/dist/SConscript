@@ -2,4 +2,5 @@ Import('env')
 
 env = env.Clone()
 bin = env.Installer('install')
+env.Depends("#/src/dist/fssetup.exe", bin)
 env.Alias('installer', env.Install('#/bin', ["#/src/dist/fssetup.exe"]))
