@@ -345,7 +345,7 @@ Function postWaxDirPage
 FunctionEnd
 
 Function .onInstSuccess
-  DeleteRegKey HKEY_CURRENT_USER "SOFTWARE\DebugMode\FrameServer\updateUrl"
+  DeleteRegValue HKEY_CURRENT_USER "SOFTWARE\DebugMode\FrameServer" "updateUrl"
   MessageBox MB_YESNO "View readme?" IDNO NoReadme
   Exec 'notepad.exe "$0\readme.txt"'
   NoReadme:
@@ -377,13 +377,14 @@ Section Uninstall
   Delete /REBOOTOK "$SYSDIR\dfsc.dll"
   Delete /REBOOTOK "$SYSDIR\dfscacm.dll"
   DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\DebugMode FrameServer"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\VegasPlug Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\VegasV2PlugConfig Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\PremPlug Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\MsproPlug Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\UVStudioPlug Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\EditstudioPlug Path"
-  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer\WaxPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "InstallDir"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV2PlugConfig Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
   DeleteIniStr System.ini, drivers32, vidc.dfsc
   DeleteIniStr System.ini, drivers32, msacm.dfscacm
   DeleteIniStr Control.ini, drivers.desc, dfsc.dll
