@@ -9,7 +9,7 @@ Frameserver's build uses the SCons build system (you can find the build configs 
   # MS Visual Studio 6.0, for most of the plug-ins
   # MS Visual Studio 2008 (can use express edition), for Vegas Pro and Premiere Pro plug-ins
   # A Visual Studio 6.0 compatible platform SDK. I use MS Windows Server 2003 R2 Platform SDK (http://www.microsoft.com/downloads/details.aspx?FamilyID=484269e2-3b89-47e3-8eb7-1f2be6d7123a)
-  # Latest version of Windows platform SDK. I use Windows SDK 6.1 for Windows Server 2008 and .NET Framework 3.5 (both 32 bit and 64 bit components).
+  # Latest version of Windows platform SDK. I use Windows SDK 6.1 for Windows Server 2008 and .NET Framework 3.5 (http://www.microsoft.com/downloads/en/details.aspx?FamilyID=e6e1c3df-a74f-4207-8586-711ebe331cdc&displaylang=en - Install both 32 bit and 64 bit components).
   # Nullsoft Scriptable Install system, for the installer (NSIS, http://nsis.sourceforge.net/)
   # Python, for build scripts (tested with version 2.6, http://www.python.org)
   # SCons (tested with version 1.2.0, http://www.scons.org)
