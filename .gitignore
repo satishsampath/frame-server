@@ -2,7 +2,11 @@
 *.idb
 *.pdb
 .sconsign.dblite
+bin/
 build/
 src/sdks/
-src/dist/bin/
+src/dist/bin/dfsc*
+src/dist/bin/*.dll
+src/dist/bin/*.exe
+src/dist/bin/*.prm
 src/dist/fssetup.exe

@@ -18,6 +18,25 @@ bin = is_env.SharedLibrary(
 )
 env.Install('#/src/dist/bin', bin[0])
 
+# TODO: Uncomment this once we fix image sequence export from 64 bit processes.
+# Build the x64 version of ImageSequence.dll using VC9
+"""
+is_x64_env = env_vc9_x64.Clone()
+is_x64_env['CPPDEFINES'].remove('UNICODE')
+is_x64_env['CPPDEFINES'].remove('_UNICODE')
+is_x64_env['CPPDEFINES'] += ['_MBCS', '_USRDLL', 'IMAGESEQUENCE_EXPORTS']
+is_x64_env['LIBS'] += ['gdiplus.lib', 'vfw32.lib']
+target = 'ImageSequence-x64'
+is_x64_env['PDB'] = target + '.pdb'
+bin = is_x64_env.SharedLibrary(
+  target,
+  [
+    is_x64_env.Object('ImageSequence-x64', 'ImageSequence.cpp'),
+  ]
+)
+env.Install('#/src/dist/bin', bin[0])
+"""
+
 # ---- fscommon.dll ----
 fc_env = env.Clone()
 
@@ -67,7 +86,7 @@ co_uni_env.Library(
 # Build the UNICODE x64 version of the library using VC9
 co_x64_env = env_vc9_x64.Clone()
 co_x64_env['CPPPATH'] = cpppath
-co_x64_env['CPPDEFINES'] += ['WIN64', 'UNICODE', '_UNICODE']
+co_x64_env['CPPDEFINES'] += ['UNICODE', '_UNICODE']
 co_x64_env.Library(
   'common_unicode_x64',
   [

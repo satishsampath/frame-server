@@ -31,6 +31,7 @@ DirText "Installation Directory" "Select where to install DebugMode FrameServer 
 
 Var FsInstallDir
 Var UsePremiereV2
+Var UsePremiereV2EL
 Var UsePremiereV2CS5
 
 ;--------------------------------------------
@@ -146,39 +147,48 @@ Section /o "Adobe® Premiere® CS5 (64-bit) Plugin" secPremCS5Plug
 SectionEnd
 
 Section /o "Adobe® Premiere®/Pro/Elements Plugin" secPremPlug
-  IntCmp $UsePremiereV2 1 0 precs4
-    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$2\dfscPremiereOut.prm"
-    SetOutPath "$2"
+  IntCmp $UsePremiereV2 1 0 precs4EL
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$3\dfscPremiereOut.prm"
+    SetOutPath "$3"
     File bin\dfscPremiereOut.prm
     Goto funcend
+  precs4EL:
+    IntCmp $UsePremiereV2EL 1 0 precs4
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$3\Plug-ins\en_US\dfscPremiereOut.prm"
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlugEPR Path" "$3\sharingcenter\Presets\pc\OTHERS\DMFS\DMFS.epr"
+    SetOutPath "$3\Plug-ins\en_US"
+    File bin\dfscPremiereOut.prm
+    SetOutPath "$3\sharingcenter\Presets\pc\OTHERS\DMFS"
+    File bin\DMFS.epr
+    Goto funcend
   precs4:
-    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$2\cm-dfscPremiereOut.prm"
-    SetOutPath "$2"
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$3\cm-dfscPremiereOut.prm"
+    SetOutPath "$3"
     File bin\cm-dfscPremiereOut.prm
   funcend:
 SectionEnd
 
 Section /o "Ulead® MediaStudio® Pro Plugin" secMsproPlug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path" "$3\dfscMSProOut.vio"
-  SetOutPath "$3"
-  File bin\dfscMSProOut.vio
-SectionEnd
-
-Section /o "Ulead® VideoStudio® Plugin" secUVStudioPlug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path" "$4\dfscMSProOut.vio"
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path" "$4\dfscMSProOut.vio"
   SetOutPath "$4"
   File bin\dfscMSProOut.vio
 SectionEnd
 
-Section /o "Pure Motion EditStudio Plugin" secEditstudioPlug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path" "$5\dfscEditStudioOut.eds_plgn"
+Section /o "Ulead® VideoStudio® Plugin" secUVStudioPlug
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path" "$5\dfscMSProOut.vio"
   SetOutPath "$5"
+  File bin\dfscMSProOut.vio
+SectionEnd
+
+Section /o "Pure Motion EditStudio Plugin" secEditstudioPlug
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path" "$6\dfscEditStudioOut.eds_plgn"
+  SetOutPath "$6"
   File bin\dfscEditStudioOut.eds_plgn
 SectionEnd
 
 Section /o "DebugMode Wax Plugin" secWaxPlug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path" "$6\dfscWaxOut.dll"
-  SetOutPath "$6"
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path" "$7\dfscWaxOut.dll"
+  SetOutPath "$7"
   File bin\dfscWaxOut.dll
 SectionEnd
 
@@ -200,7 +210,7 @@ Function preVegasDirPage
   IfFileExists "$PROGRAMFILES64\Sony\Vegas Pro 10.0\*.*" vegas100x64
   IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 10.0\*.*" vegas100
   IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 9.0\*.*" vegas90
-  StrCpy $INSTDIR "$PROGRAMFILES\Sony\Shared Plug-Ins\*.*"
+  StrCpy $INSTDIR "$PROGRAMFILES\Sony\Shared Plug-Ins"
   IfFileExists "$INSTDIR\*.*" funcend
   CreateDirectory "$INSTDIR"
   Goto funcend
@@ -241,7 +251,11 @@ Function prePremiereDirPage
   IfErrors 0 funcend  ; If found, we are done.
   Push 0
   Pop $UsePremiereV2
+  Push 0
+  Pop $UsePremiereV2EL
   Strcpy $INSTDIR "$PROGRAMFILES"
+  IfFileExists "$PROGRAMFILES\Adobe\Adobe Premiere Elements 9\*.*" vElem90present
+  IfFileExists "$PROGRAMFILES\Adobe\Adobe Premiere Elements 8\*.*" vElem80present
   IfFileExists "$PROGRAMFILES\Adobe\Premiere Elements 1.0\*.*" vElem10present
   IfFileExists "$PROGRAMFILES\Adobe\Premiere Pro 1.5\*.*" vPro15present
   IfFileExists "$PROGRAMFILES\Adobe\Premiere Pro\*.*" vPro10present
@@ -262,6 +276,20 @@ Function prePremiereDirPage
     Goto funcend
   vElem10present:
     StrCpy $INSTDIR "$PROGRAMFILES\Adobe\Premiere Elements 1.0\Plug-ins\en_US"
+    Goto funcend
+  vElem90present:
+    Push 1
+    Pop $UsePremiereV2EL
+    StrCpy $INSTDIR "$PROGRAMFILES\Adobe\Adobe Premiere Elements 9"
+    IfFileExists "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS\*.*" funcend
+    CreateDirectory "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS"
+    Goto funcend
+  vElem80present:
+    Push 1
+    Pop $UsePremiereV2EL
+    StrCpy $INSTDIR "$PROGRAMFILES\Adobe\Adobe Premiere Elements 8"
+    IfFileExists "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS\*.*" funcend
+    CreateDirectory "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS"
     Goto funcend
   funcend:
 FunctionEnd
@@ -411,10 +439,11 @@ Section Uninstall
   ReadRegStr $R2 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV2PlugConfig Path"
   ReadRegStr $R3 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremCS5Plug Path"
   ReadRegStr $R4 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
-  ReadRegStr $R5 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
-  ReadRegStr $R6 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
-  ReadRegStr $R7 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
-  ReadRegStr $R8 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
+  ReadRegStr $R5 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlugEPR Path"
+  ReadRegStr $R6 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
+  ReadRegStr $R7 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
+  ReadRegStr $R8 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
+  ReadRegStr $R9 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
   UnRegDll "$R1"
   Delete "$R1"
   Delete "$R2"
@@ -424,6 +453,7 @@ Section Uninstall
   Delete "$R6"
   Delete "$R7"
   Delete "$R8"
+  Delete "$R9"
   Delete "$INSTDIR\dfscVegasV2Out.dll"
   Delete "$INSTDIR\DFsNetClient.exe"
   Delete "$INSTDIR\fsuninst.exe"
@@ -438,6 +468,7 @@ Section Uninstall
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV2PlugConfig Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremCS5Plug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlugEPR Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
