@@ -4,7 +4,7 @@ Import('env_vc9')
 fio_env = env_vc9.Clone()
 
 fio_env['CPPDEFINES'] += ['_LIB']
-fio_env['CPPPATH'] = ['../sdks/VegasV2/fio/libFileIO']
+fio_env['CPPPATH'] = ['../sdks/VegasV2/libFileIO']
 fio_env['LIBS'].remove('common.lib')
 fio_env['LIBS'] += ['rpcrt4.lib']
 fio_env['LINKFLAGS'] += ['/IGNOREIDL']
@@ -14,11 +14,11 @@ fio_env['PDB'] = target + '.pdb'
 bin = fio_env.Library(
   target,
   [
-    '../sdks/VegasV2/fio/libFileIO/SfAudioUtil.cpp',
-    '../sdks/VegasV2/fio/libFileIO/SfMem.cpp',
-    '../sdks/VegasV2/fio/libFileIO/SfReadStreams.cpp',
-    '../sdks/VegasV2/fio/libFileIO/SfTemplate.cpp',
-    '../sdks/VegasV2/fio/libFileIO/SfWaveFormat.cpp'
+    '../sdks/VegasV2/libFileIO/SfAudioUtil.cpp',
+    '../sdks/VegasV2/libFileIO/SfMem.cpp',
+    '../sdks/VegasV2/libFileIO/SfReadStreams.cpp',
+    '../sdks/VegasV2/libFileIO/SfTemplate.cpp',
+    '../sdks/VegasV2/libFileIO/SfWaveFormat.cpp'
   ]
 )
 
@@ -26,7 +26,7 @@ bin = fio_env.Library(
 env = env_vc9.Clone()
 
 env['CPPDEFINES'] += ['_USRDLL']
-env['CPPPATH'] = ['../sdks/VegasV2/fio/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
+env['CPPPATH'] = ['../sdks/VegasV2/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
 env['LIBS'].remove('common.lib')
 env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode.lib', 'libfileio.lib']
 env['LIBPATH'] += ['../VegasV2']

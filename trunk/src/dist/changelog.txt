@@ -1,6 +1,15 @@
 Change log
 ----------
 
+version 2.9
+-----------
+
+- By Victor T. - Added support for Premiere CS5:
+64-bit:native plugin
+
+Known Issues:
+- When YUY2 video option is selected, un-optimized RGB->YUY2 conversion code is used. It may work slower compared to the older versions of the plugin.
+
 version 2.8
 -----------
 

@@ -13,6 +13,7 @@ Page license
 Page components "" "" postComponentsPage
 Page directory preCoreDirPage "" postCoreDirPage
 Page directory preVegasDirPage showVegasDirPage postVegasDirPage
+Page directory prePremiereCS5DirPage showPremiereCS5DirPage postPremiereCS5DirPage
 Page directory prePremiereDirPage showPremiereDirPage postPremiereDirPage
 Page directory preMsproDirPage showMsproDirPage postMsproDirPage
 Page directory preUVStudioDirPage showUVStudioDirPage postUVStudioDirPage
@@ -30,6 +31,7 @@ DirText "Installation Directory" "Select where to install DebugMode FrameServer 
 
 Var FsInstallDir
 Var UsePremiereV2
+Var UsePremiereV2CS5
 
 ;--------------------------------------------
 ; SetPageTextString
@@ -94,6 +96,9 @@ Section "DebugMode FrameServer Core (required)" secCore
   File bin\dfsc.dll
   File bin\dfscacm.dll
 
+  SetRegView 64 
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "InstallDir" "$0"
+  SetRegView 32 
   WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "InstallDir" "$0"
   WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\DebugMode FrameServer" "DisplayName" "DebugMode FrameServer"
   WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\DebugMode FrameServer" "UninstallString" '"$0\fsuninst.exe"'
@@ -129,6 +134,14 @@ Section /o "Sony® Vegas® Plugin" secVegasPlug
     SetOutPath "$1"
     File bin\dfscVegasOut.dll
     RegDLL "$1\dfscVegasOut.dll"
+  funcend:
+SectionEnd
+
+Section /o "Adobe® Premiere® CS5 (64-bit) Plugin" secPremCS5Plug
+  IntCmp $UsePremiereV2CS5 1 0 funcend
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremCS5Plug Path" "$2\dfscPremiereOutCS5.prm"
+    SetOutPath "$2"
+    File bin\dfscPremiereOutCS5.prm
   funcend:
 SectionEnd
 
@@ -203,6 +216,21 @@ vegas100x64:
 funcend:
 FunctionEnd
 
+Function prePremiereCS5DirPage
+  SectionGetFlags ${secPremCS5Plug} $R0
+  Call AbortIfSectionNotSelected
+  ; Check if Premiere Pro CS5 or above is present.
+  Push 1
+  Pop $UsePremiereV2CS5
+  SetRegView 64 
+  ReadRegStr $INSTDIR HKEY_LOCAL_MACHINE "SOFTWARE\Adobe\Premiere Pro\CurrentVersion" "Plug-InsDir"
+  IfErrors 0 funcend  ; If found, we are done.
+  Push 0
+  Pop $UsePremiereV2CS5
+funcend:
+  SetRegView 32 
+FunctionEnd
+
 Function prePremiereDirPage
   SectionGetFlags ${secPremPlug} $R0
   Call AbortIfSectionNotSelected
@@ -269,6 +297,11 @@ Function showVegasDirPage
   Call SetPageTextString
 FunctionEnd
 
+Function showPremiereCS5DirPage
+  Push "Select where to install Adobe® Premiere® CS5 (64-bit) Plugin"
+  Call SetPageTextString
+FunctionEnd
+
 Function showPremiereDirPage
   Push "Select where to install Adobe® Premiere®/Premiere® Pro Plugin"
   Call SetPageTextString
@@ -291,6 +324,9 @@ FunctionEnd
 
 Function postComponentsPage
   SectionGetFlags ${secVegasPlug} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "${SF_SELECTED}" noabort
+  SectionGetFlags ${secPremCS5Plug} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
   StrCmp $R0 "${SF_SELECTED}" noabort
   SectionGetFlags ${secPremPlug} $R0
@@ -323,33 +359,39 @@ Function postVegasDirPage
   StrCpy $INSTDIR $0
 FunctionEnd
 
-Function postPremiereDirPage
+Function postPremiereCS5DirPage
   Call AbortIfInvalidInstDir
   StrCpy $2 $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
-Function postMsproDirPage
+Function postPremiereDirPage
   Call AbortIfInvalidInstDir
   StrCpy $3 $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
-Function postUVStudioDirPage
+Function postMsproDirPage
   Call AbortIfInvalidInstDir
   StrCpy $4 $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
-Function postEditstudioDirPage
+Function postUVStudioDirPage
   Call AbortIfInvalidInstDir
   StrCpy $5 $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
-Function postWaxDirPage
+Function postEditstudioDirPage
   Call AbortIfInvalidInstDir
   StrCpy $6 $INSTDIR
+  StrCpy $INSTDIR $0
+FunctionEnd
+
+Function postWaxDirPage
+  Call AbortIfInvalidInstDir
+  StrCpy $7 $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
@@ -367,11 +409,12 @@ UninstallText "This will uninstall DebugMode FrameServer from your system"
 Section Uninstall
   ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasPlug Path"
   ReadRegStr $R2 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV2PlugConfig Path"
-  ReadRegStr $R3 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
-  ReadRegStr $R4 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
-  ReadRegStr $R5 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
-  ReadRegStr $R6 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
-  ReadRegStr $R7 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
+  ReadRegStr $R3 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremCS5Plug Path"
+  ReadRegStr $R4 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
+  ReadRegStr $R5 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
+  ReadRegStr $R6 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
+  ReadRegStr $R7 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
+  ReadRegStr $R8 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
   UnRegDll "$R1"
   Delete "$R1"
   Delete "$R2"
@@ -380,15 +423,20 @@ Section Uninstall
   Delete "$R5"
   Delete "$R6"
   Delete "$R7"
+  Delete "$R8"
   Delete "$INSTDIR\dfscVegasV2Out.dll"
   Delete "$INSTDIR\DFsNetClient.exe"
   Delete "$INSTDIR\fsuninst.exe"
   Delete /REBOOTOK "$SYSDIR\dfsc.dll"
   Delete /REBOOTOK "$SYSDIR\dfscacm.dll"
   DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\DebugMode FrameServer"
+  SetRegView 64 
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "InstallDir"
+  SetRegView 32 
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "InstallDir"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV2PlugConfig Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremCS5Plug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "MsproPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"

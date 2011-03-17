@@ -54,7 +54,7 @@ BOOL __cdecl ES_VideoImportGetFrameOpen(void* pPluginData, LPCSTR pFilename,
 void __cdecl ES_VideoImportGetFrameClose(void* pPluginData, void* pMediaFileHandle);
 BOOL __cdecl ES_VideoImportVideoDetails(void* pPluginData, void* pMediaFileHandle,
                                         TES_PluginVideoMediaDetails1* pMediaDetails);
-BOOL __cdecl ES_VideoImportGetFrame(void* pPluginDataIn, void* pMediaFileHandleIn, TES_PluginVideoImportGetFrame1* pGetFrame);
+BOOL __cdecl ES_VideoImportGetFrame(void* pPluginDataIn, void* pMediaFileHandleIn, TES_PluginVideoImportGetFrame2* pGetFrame);
 void __cdecl ES_VideoShowVideoImportPropertiesDlg(void* pPluginData,
                                                   TES_PluginVideoShowImportPropertiesDlg1* pPluginVideoShowImportProperties);
 void __cdecl ES_VideoShowVideoExportPropertiesDlg(void* pPluginData,
@@ -88,7 +88,7 @@ typedef struct {
 class CEditStudioFS : public FrameServerImpl {
 public:
   INT32 markInMs;
-  TES_PluginVideoExport1* pExport;
+  TES_PluginVideoExport2* pExport;
   TPluginData* pPluginData;
 
 public:

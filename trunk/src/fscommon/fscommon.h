@@ -25,6 +25,19 @@
 #include <tchar.h>
 #include "dfsc.h"
 
+// These defines are used to make the same code build on VC6 32-bit, latest VC 32-bit and
+// latest VC 64-bit builds.
+#if defined(_WIN64)
+  #define DLGPROCRET INT_PTR
+#else  // defined(__WIN64)
+  #define DLGPROCRET BOOL
+  #if !defined(GWLP_WNDPROC)
+    #define GWLP_WNDPROC GWL_WNDPROC
+    #define GetWindowLongPtr GetWindowLong
+    #define SetWindowLongPtr SetWindowLong
+  #endif  // !defined(GWLP_WNDPROC)
+#endif  // defined(__WIN64)
+
 enum {
   sfRGB24 = 0,
   sfRGB32,
@@ -46,12 +59,12 @@ extern HINSTANCE ghResInst;
 
 extern bool LoadCommonResource();
 extern void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataFormat = idfRGB32);
-extern BOOL CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
-extern BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
-extern BOOL CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
-extern BOOL CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
 extern void InitClip();
 extern void SetFsIconForWindow(HWND wnd);
+extern DLGPROCRET CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
+extern DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
+extern DLGPROCRET CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
+extern DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
 
 inline unsigned char Clip(int x) {
   return clip[320 + ((x + 0x8000) >> 16)];
@@ -84,3 +97,4 @@ public:
 };
 
 #endif  // FSCOMMON_FSCOMMON_H
+
