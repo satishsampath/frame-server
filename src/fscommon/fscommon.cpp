@@ -165,10 +165,10 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
     EnableWindow(GetDlgItem(dlg, IDC_NETPORT), networkServing);
 
-    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)"JPEG");
-    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)"PNG");
-    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)"TIFF");
-    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)"BMP");
+    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("JPEG"));
+    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("PNG"));
+    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("TIFF"));
+    SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("BMP"));
     SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_SETCURSEL, imageSequenceFormat, 0);
 
     SetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath);

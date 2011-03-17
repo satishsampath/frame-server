@@ -8,6 +8,7 @@ def SetupEnv(environ, vcver):
   ]
   environ['LIBS'] = [
     # Standard windows libraries
+    'shlwapi.lib',
     'kernel32.lib',
     'user32.lib',
     'gdi32.lib',
@@ -40,12 +41,20 @@ def SetupEnv(environ, vcver):
   # Release configurations.
   if int(ARGUMENTS.get('dbg', 0)):
     out_dir = 'build/dbg'
+    ccflags9 = ['/MDd', '/W3', '/Od', '/Fd', '/Gm', '/EHsc','/RTC1', '/ZI', '/errorReport:prompt']
+    ccpdbflags9 = ['${(PDB and "/ZI") or ""}']
+    linkflags9 = ['/machine:X86', '/DEBUG' , '/MANIFEST', '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'', '/SUBSYSTEM:WINDOWS', '/DYNAMICBASE' , '/NXCOMPAT', '/ERRORREPORT:PROMPT']
+    cppdefines9 = ['WIN32', '_WINDOWS', 'UNICODE', '_UNICODE', '_DEBUG']
     ccflags = ['/MTd', '/W3', '/Od', '/FD', '/GZ']
     rcflags = ['/l', '0x409', '/d', '_DEBUG']
     linkflags = ['/machine:I386']
     cppdefines = ['WIN32', '_WINDOWS', '_MBCS', '_DEBUG']
   else:
     out_dir = 'build/opt'
+    ccflags9 = ['/MD', '/W3', '/O2', '/Oi', '/GL', '/FD', '/EHsc', '/Zi', '/errorReport:prompt']
+    ccpdbflags9 = ['${(PDB and "/Zi") or ""}']
+    linkflags9 = ['/machine:X86', '/DEBUG' , '/MANIFEST', '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'', '/SUBSYSTEM:WINDOWS', '/DYNAMICBASE' , '/NXCOMPAT', '/OPT:REF', '/OPT:ICF', '/LTCG', '/ERRORREPORT:PROMPT']
+    cppdefines9 = ['WIN32', '_WINDOWS', 'UNICODE', '_UNICODE', 'NDEBUG']
     ccflags = ['/MD', '/W3', '/O1', '/FD']
     rcflags = ['/l', '0x409', '/d', '_DEBUG']
     linkflags = ['/machine:I386', '/filealign:512', '/map', '/opt:ref', '/opt:icf']
@@ -54,10 +63,35 @@ def SetupEnv(environ, vcver):
     ccflags += ['/GX']
   else:
     ccflags += ['/EHsc']
-  environ['CCFLAGS'] += ccflags
+
+  if vcver == 9:
+    environ['CCFLAGS'] = ccflags9
+    environ['LINKFLAGS'] = linkflags9
+    environ['CPPDEFINES'] = cppdefines9
+    environ['CCPDBFLAGS'] = ccpdbflags9
+    mtpaths=[
+      'c:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\Bin',
+      'c:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1\\Bin',
+      'c:\\Program Files\\Microsoft SDKs\\Windows\\v7.0a\\Bin',
+      'c:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.0a\\Bin'
+    ]
+    found = False
+    for p in mtpaths:
+      mt = os.path.join(p, 'mt.exe')
+      if os.path.exists(mt):
+        found = True
+        environ.AppendENVPath('PATH', p)
+        break
+    if not found:
+      print "Error: Unable to find where mt.exe and rc.exe are installed. Please check if you have the latest Windows SDK installed."
+      Exit(1)
+  else:
+    environ['CCFLAGS'] += ccflags
+    environ['LINKFLAGS'] = linkflags
+    environ['CPPDEFINES'] = cppdefines
+
+  environ['CXXFLAGS'] = ['$(', '/TP', '$)'] #as in SCONS v2.x
   environ['RCFLAGS'] += rcflags
-  environ['LINKFLAGS'] = linkflags
-  environ['CPPDEFINES'] = cppdefines
   environ['dbg'] = int(ARGUMENTS.get('dbg', 0))
   environ['NSISFLAGS'] = ['/V2']
   environ.Tool("nsis", toolpath=["scons_tools"])
@@ -66,11 +100,15 @@ def SetupEnv(environ, vcver):
 # Choose VC6 no matter what other Visual studio versions are installed
 env = Environment(MSVS_VERSION = '6.0')
 env_vc8 = Environment(MSVS_VERSION = '8.0')
+env_vc9 = Environment(MSVS_VERSION = '9.0')
+
 
 SetupEnv(env, 6)
 SetupEnv(env_vc8, 8)
+SetupEnv(env_vc9, 9)
 Export('env')
 Export('env_vc8')
+Export('env_vc9')
 
 # Build!
 if int(ARGUMENTS.get('dbg', 0)):

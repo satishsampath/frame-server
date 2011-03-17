@@ -23,8 +23,10 @@
 #define VEGASV2_VEGASFS_H
 
 #include "SfRenderFileClass.h"
+#include "SfMeta.h"
 
-class VegasFS : public ISfRenderFileClass {
+class VegasFS : public ISfRenderFileClass,
+                public ISfRenderMetaSupport2 {
 public:
   VegasFS();
   ~VegasFS();
@@ -65,6 +67,14 @@ public:
   STDMETHOD(GetPropertyPageCount) (LONG * pcFreePages, LONG * pcPagesForSale,
       SFFILERENDERPAGEOPTIONS * prPageOptions);
   STDMETHOD(GetPropertyPage) (LONG ixIndex, IPropertyPage * *ppPropPage);
+
+  // START: ISfRenderMetaSupport
+  STDMETHOD(Reset)();
+  STDMETHOD(GetNextSumTag)(FOURCC* fcc, 
+                           DWORD* pcchLen);
+   // START: ISfRenderMetaSupport2
+  STDMETHOD(GetSupportedTypes)(SFFIO_TYPESOFMETADATA* peEmbedded,
+                               SFFIO_TYPESOFMETADATA* peExternal);
 
 public:
   static const GUID& ms_uidReader;

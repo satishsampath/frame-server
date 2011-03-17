@@ -113,12 +113,12 @@ BEGIN
     LTEXT           "Web :",IDC_STATIC,7,123,20,8
     LTEXT           "http://www.debugmode.com/",IDC_WEBPAGE,32,123,96,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,261,1
-    LTEXT           "DebugMode FrameServer © 2000-2007 Satish Kumar",
-                    IDC_STATIC,7,29,184,8
-    EDITTEXT        IDC_WARNING,16,43,210,78,ES_MULTILINE | ES_AUTOVSCROLL | 
+    LTEXT           "DebugMode FrameServer © 2000-20011 Satish Kumar\r\n                                          © 2011 Victor Tchistiak",
+                    IDC_STATIC,7,29,184,20
+    EDITTEXT        IDC_WARNING,16,53,210,68,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "2.7",IDC_VERSION,206,29,11,8
+    LTEXT           "2.8",IDC_VERSION,206,29,11,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -127,7 +127,7 @@ END
 IDD_SERVING DIALOGEX 0, 0, 233, 210
 STYLE DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "FrameServer - (Status)"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Stop Serving",IDCANCEL,171,169,55,14
     PUSHBUTTON      "About",IDC_ABOUT,6,169,55,14
@@ -309,4 +309,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

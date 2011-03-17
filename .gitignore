@@ -1,0 +1,7 @@
+*.pyc
+*.idb
+*.pdb
+.sconsign.dblite
+build/
+src/sdks/
+src/dist/bin/

@@ -20,6 +20,7 @@
  */
 
 #include <windows.h>
+#include <TCHAR.H>
 #include "SfEnum.h"
 #include "SfMem.h"
 #include "SfFileIOManager.h"
@@ -43,10 +44,21 @@ const GUID GUID_FrameServerPreset = {
 #define TEMPLATE_SUB_VERSION     (0 << 8)
 #define TEMPLATE_LETTER_VERSION  0
 
+struct ExtraEncoderParameter
+///////////////////////////////////////////////////////////////////////////////////////////////////
+{
+   DWORD ccPreferedAudioInterleaveSize;
+   DWORD dwPaddingGranularity;
+   DWORD dwCompressedVideoQuality;     // only valid for fccVideoCompressor = BI_MJEPG
+   DWORD bMotionJPEG_B;                // only valid for fccVideoCompressor = BI_MJEPG
+};
+
+ExtraEncoderParameter eeParam = {0};
+
 const GUID& VegasFS::ms_uidRenderer(CLSID_VegasFS);
 DWORD VegasFS::ms_dwStreamTypes = SFFIO_STREAM_TYPE_AUDIO | SFFIO_STREAM_TYPE_VIDEO;
 
-VegasFS::VegasFS() : m_dwRef(1), m_ixType(-1), m_pFileIOManager(NULL) {
+VegasFS::VegasFS() : m_dwRef(0), m_ixType(-1), m_pFileIOManager(NULL) {
 }
 
 VegasFS::~VegasFS() {
@@ -59,21 +71,34 @@ STDMETHODIMP VegasFS::QueryInterface(REFIID riid, LPVOID* ppvObj) {
     *ppvObj = static_cast<ISfRenderFileClass*>(this);
     return S_OK;
   }
+  else 
+   if (__uuidof(ISfRenderMetaSupport) == riid)
+   {
+      AddRef();
+      *ppvObj = static_cast<ISfRenderMetaSupport*>(this);
+      return S_OK;
+   }
+   else
+   if (__uuidof(ISfRenderMetaSupport2) == riid)
+   {
+      AddRef();
+      *ppvObj = static_cast<ISfRenderMetaSupport2*>(this);
+      return S_OK;
+   }
   return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) VegasFS::AddRef() {
-  m_dwRef++;
-  return m_dwRef;
+  return InterlockedIncrement((long*)&m_dwRef);
 }
 
 STDMETHODIMP_(ULONG) VegasFS::Release() {
-  --m_dwRef;
-  if (m_dwRef == 0) {
-    delete this;
-    return 0;
+  LONG cRef = InterlockedDecrement((long*)&m_dwRef);
+  if(cRef == 0)
+  {
+    SfDelete this;
   }
-  return m_dwRef;
+  return cRef;
 }
 
 STDMETHODIMP VegasFS::SetTypeIndex(LONG ixType) {
@@ -114,7 +139,7 @@ STDMETHODIMP VegasFS::SetIOManager(ISfFileIOManager* pBack) {
 STDMETHODIMP VegasFS::GetIOManager(ISfFileIOManager** ppBack) {
   HRESULT hr = S_OK;
 
-  if (ppBack) {
+  if (ppBack && m_pFileIOManager) {
     hr = m_pFileIOManager->QueryInterface(__uuidof(ISfFileIOManager), (void**)ppBack);
   } else {
     hr = E_INVALIDARG;
@@ -169,13 +194,14 @@ STDMETHODIMP VegasFS::GetStrings(const SFFIO_FILECLASS_INFO_TEXT* paStringIds,
     int key;
     wchar_t* value;
   } strings[] = {
-    { SFFIO_FILECLASS_TEXT_BuildTypeTag, L"" },
     // non-localized Type Name (short version)
     { SFFIO_FILECLASS_TEXT_BriefTypeNameEng, L"FrameServer" },
     // non-localized FileTypeName (long version)
     { SFFIO_FILECLASS_TEXT_FileTypeNameEng, L"DebugMode FrameServer" },
     // list of possible file extensions
     { SFFIO_FILECLASS_TEXT_FileExtensions, L"*.avi" },
+    // build type tag (FINAL builds have "" as the tag)
+    { SFFIO_FILECLASS_TEXT_BuildTypeTag, L"" },
     // Localized Type Name (long version)
     { SFFIO_FILECLASS_TEXT_FileTypeNameLocalized, L"DebugMode FrameServer"},
     { SFFIO_FILECLASS_TEXT_DialogTitleLocalized, L"DebugMode FrameServer"},
@@ -187,8 +213,9 @@ STDMETHODIMP VegasFS::GetStrings(const SFFIO_FILECLASS_INFO_TEXT* paStringIds,
   for (ULONG i = 0; i < cStrings; ++i) {
     for (int j = 0; j < NUMELMS(strings); ++j) {
       if (strings[j].key == paStringIds[i]) {
-        abstrStrings[i] = SysAllocStringLen(NULL, (UINT)wcslen(strings[j].value));
-        wcscpy(abstrStrings[i], strings[j].value);
+        BSTR bstr = SysAllocStringLen(NULL, (UINT)wcslen(strings[j].value));
+        wcscpy(bstr, strings[j].value);
+        abstrStrings[i] = bstr;
         break;
       }
     }
@@ -208,10 +235,11 @@ STDMETHODIMP VegasFS::Create(ISfRenderFile** pSfFile,
     LONG cStreams,
     ISfReadStream** paStreams,
     PCSFTEMPLATEx pTemplate) {
-  VegasFSRender* fsr = new VegasFSRender(this, pTemplate);
+  HRESULT hr = S_OK;
+  VegasFSRender* fsr = SfNew VegasFSRender(this, pTemplate);
 
   fsr->Init();
-  HRESULT hr = fsr->SetFile(pszFilename);
+  hr = fsr->SetFile(pszFilename);
 
   if (SUCCEEDED(hr)) {
     for (LONG i = 0; i < cStreams; ++i) {
@@ -308,13 +336,13 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
     LONG ixPreset) {
   HRESULT hr = S_OK;
 
-  if (ppTemplate && ixPreset == 0) {
+  if (ppTemplate && ixPreset <= 0) {
     TCHAR sName[MAX_PATH] = L"Project Default";
     TCHAR sDesc[MAX_PATH] = L"Default";
 
     if (SUCCEEDED(hr)) {
       hr = AllocateTemplate(ppTemplate,
-          0,
+          sizeof(ExtraEncoderParameter),
           sName,
           sDesc);
 
@@ -323,6 +351,7 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
 
         pTemplate->id = ixPreset;
         pTemplate->iidOwner = CLSID_VegasFS;
+        pTemplate->guid = GUID_FrameServerPreset;
 
         // audio
         pTemplate->Audio.cbStruct = NUMBYTES(pTemplate->Audio);
@@ -356,6 +385,8 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
         pTemplate->Video.Codec.bih = pTemplate->Video.Render.bih;
         pTemplate->Video.Codec.bih.biCompression = BI_RGB;
         pTemplate->Video.Codec.cKeyFrameEvery = 1;
+
+        CopyMemory( pTemplate->abExtra, &eeParam, pTemplate->cbExtra);
 
         (static_cast<SfTemplatex*>(pTemplate))->SetText(sName, sDesc);
       } else {
@@ -410,7 +441,7 @@ STDMETHODIMP VegasFS::ConformTemplate(PSFTEMPLATEx* ppOutTemplate,
 
     if (SFFIO_CONFORM_TPL_PROJECT == eConform) {
       hr = AllocateTemplate(ppOutTemplate,
-          0,
+          sizeof(ExtraEncoderParameter),
           pszName,
           pszNotes);
     } else {
@@ -442,6 +473,12 @@ STDMETHODIMP VegasFS::ConformTemplate(PSFTEMPLATEx* ppOutTemplate,
 
     if ((*ppOutTemplate)->Video.Codec.bih.biHeight == 0) {
       (*ppOutTemplate)->Video.Codec.bih = (*ppOutTemplate)->Video.Render.bih;
+    }
+
+    if(pSourceTemplate->cbExtra == sizeof(ExtraEncoderParameter)) {
+      CopyMemory( (*ppOutTemplate)->abExtra,
+        pSourceTemplate->abExtra,
+        sizeof(ExtraEncoderParameter));
     }
 
     (static_cast<SfTemplatex*>(*ppOutTemplate))->SetText(pszName, pszNotes);
@@ -535,4 +572,31 @@ STDMETHODIMP VegasFS::ShowAboutBox(HWND hwndParent) {
 STDMETHODIMP VegasFS::GetStatus(HRESULT* phrStatus,
     BSTR* bstrStatus) {
   return E_NOTIMPL;
+}
+
+// START: ISfRenderMetaSupport
+
+STDMETHODIMP VegasFS::Reset() {
+  HRESULT hr = S_OK;
+  // TODO: implement
+  return hr;
+}
+
+STDMETHODIMP VegasFS::GetNextSumTag(FOURCC* fcc, 
+    DWORD* pcchLen) {
+  HRESULT hr = S_FALSE;
+  // TODO: implement
+  return hr;
+}
+
+STDMETHODIMP VegasFS::GetSupportedTypes(SFFIO_TYPESOFMETADATA* peEmbedded,
+    SFFIO_TYPESOFMETADATA* peExternal) {
+  HRESULT hr = S_OK;
+
+  if (peEmbedded)
+    *peEmbedded = SFFIO_METADATA_NONE; //(SFFIO_TYPESOFMETADATA) (SFFIO_METADATA_SUMMARYINFO | SFFIO_METADATA_COMMANDS | SFFIO_METADATA_MARKERS);
+
+  if (peExternal)
+    *peExternal = SFFIO_METADATA_NONE;
+  return hr;
 }

@@ -1,12 +1,35 @@
-Import('env_vc8')
+Import('env_vc9')
 
-env = env_vc8.Clone()
+# ---- libFileIO ----
+fio_env = env_vc9.Clone()
 
-env['CPPDEFINES'].remove('_MBCS')
-env['CPPDEFINES'] += ['_USRDLL', 'UNICODE', '_UNICODE']
-env['CPPPATH'] = ['../sdks/Vegas/fio/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
+fio_env['CPPDEFINES'] += ['_LIB']
+fio_env['CPPPATH'] = ['../sdks/VegasV2/fio/libFileIO']
+fio_env['LIBS'].remove('common.lib')
+fio_env['LIBS'] += ['rpcrt4.lib']
+fio_env['LINKFLAGS'] += ['/IGNOREIDL']
+
+target = 'libFileIO'
+fio_env['PDB'] = target + '.pdb'
+bin = fio_env.Library(
+  target,
+  [
+    '../sdks/VegasV2/fio/libFileIO/SfAudioUtil.cpp',
+    '../sdks/VegasV2/fio/libFileIO/SfMem.cpp',
+    '../sdks/VegasV2/fio/libFileIO/SfReadStreams.cpp',
+    '../sdks/VegasV2/fio/libFileIO/SfTemplate.cpp',
+    '../sdks/VegasV2/fio/libFileIO/SfWaveFormat.cpp'
+  ]
+)
+
+# ---- VegasV2 ----
+env = env_vc9.Clone()
+
+env['CPPDEFINES'] += ['_USRDLL']
+env['CPPPATH'] = ['../sdks/VegasV2/fio/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
 env['LIBS'].remove('common.lib')
-env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode.lib']
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode.lib', 'libfileio.lib']
+env['LIBPATH'] += ['../VegasV2']
 env['LINKFLAGS'] += ['/IGNOREIDL']
 
 target = 'dfscVegasV2Out'
@@ -17,10 +40,6 @@ bin = env.SharedLibrary(
     'VegasFSMain.cpp',
     'VegasFS.cpp',
     'VegasFSRender.cpp',
-    '../sdks/Vegas/fio/libFileIO/SfMem.cpp',
-    '../sdks/Vegas/fio/libFileIO/SfAudioUtil.cpp',
-    '../sdks/Vegas/fio/libFileIO/SfReadStreams.cpp',
-    '../sdks/Vegas/fio/libFileIO/SfWaveFormat.cpp',
     'VegasFS.def',
     env.RES('VegasFS.rc'),
   ]
