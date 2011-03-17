@@ -1,5 +1,6 @@
 Import('env')
-Import('env_vc8')
+Import('env_vc9')
+Import('env_vc9_x64')
 
 # ---- ImageSequence.dll ----
 is_env = env.Clone()
@@ -50,9 +51,8 @@ co_env.Library(
 )
 
 # Build the UNICODE version of the library using VC8
-co_uni_env = env_vc8.Clone()
+co_uni_env = env_vc9.Clone()
 co_uni_env['CPPPATH'] = cpppath
-co_uni_env['CPPDEFINES'].remove('_MBCS')
 co_uni_env['CPPDEFINES'] += ['UNICODE', '_UNICODE']
 co_uni_env.Library(
   'common_unicode',
@@ -61,5 +61,19 @@ co_uni_env.Library(
     co_uni_env.Object('blankavi-u', 'blankavi.cpp'),
     co_uni_env.Object('fscommon-u', 'fscommon.cpp'),
     co_uni_env.Object('utils-u', '../utils/utils.cpp'),
+  ]
+)
+
+# Build the UNICODE x64 version of the library using VC9
+co_x64_env = env_vc9_x64.Clone()
+co_x64_env['CPPPATH'] = cpppath
+co_x64_env['CPPDEFINES'] += ['WIN64', 'UNICODE', '_UNICODE']
+co_x64_env.Library(
+  'common_unicode_x64',
+  [
+    co_x64_env.Object('autoupdate-u-x64', 'autoupdate.cpp'),
+    co_x64_env.Object('blankavi-u-x64', 'blankavi.cpp'),
+    co_x64_env.Object('fscommon-u-x64', 'fscommon.cpp'),
+    co_x64_env.Object('utils-u-x64', '../utils/utils.cpp'),
   ]
 )

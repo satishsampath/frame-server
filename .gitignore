@@ -5,3 +5,4 @@
 build/
 src/sdks/
 src/dist/bin/
+src/dist/fssetup.exe

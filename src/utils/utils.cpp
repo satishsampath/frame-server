@@ -26,6 +26,16 @@ int FPU_enabled, MMX_enabled;
 #define CPUF_SUPPORTS_FPU      (0x00000002L)
 #define CPUF_SUPPORTS_MMX      (0x00000004L)
 
+// MMX doesn't work with the amd64 build we are making.
+#if defined(WIN64)
+void CpuDetect() {
+  FPU_enabled = 0;
+  MMX_enabled = 0;
+}
+void mmx_ConvertRGB32toYUY2(unsigned char *src,unsigned char *dst,int src_pitch, int dst_pitch,int w, int h) {
+  // Shouldn't be called.
+}
+#else  // defined(WIN64)
 long __declspec(naked) CpuDetectFlag(void) {
   __asm {
     push  ebp
@@ -194,3 +204,4 @@ outloop:
 #undef RGBOFFSET
 #undef YUVOFFSET
 }
+#endif  // defined(WIN64)

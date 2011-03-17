@@ -20,6 +20,7 @@
  */
 
 #include <windows.h>
+#include <time.h>
 #include "EditStudioFS.h"
 
 HINSTANCE ghInst;
@@ -158,7 +159,7 @@ BOOL __cdecl ES_PluginAttribute(void* pPluginData,
   return bRecognised;
 }
 
-void __cdecl ES_VideoExport(void* pPluginDataIn, TES_PluginVideoExport1* pExport,
+void __cdecl ES_VideoExport(void* pPluginDataIn, TES_PluginVideoExport2* pExport,
     LPCSTR pFilename, char* pErrorMsg) {
   CEditStudioFS fs;
   char sFilename[MAX_PATH];
@@ -187,7 +188,7 @@ void __cdecl ES_VideoExport(void* pPluginDataIn, TES_PluginVideoExport1* pExport
 void CEditStudioFS::OnVideoRequest() {
   INT32 srcFrameMs = markInMs + (DWORD)((vars->videoFrameIndex * 1000) / fps) + 1;
 
-  pPluginData->m_tCallbackFuncs.m_pES_CallbackRenderFrame(pExport, srcFrameMs);
+  pPluginData->m_tCallbackFuncs.m_pES_CallbackRenderFrame((TES_PluginVideoExport1*)pExport, srcFrameMs);
   ConvertVideoFrame((LPBYTE)pExport->m_pBitmapInfo + pExport->m_pBitmapInfo->bmiHeader.biSize,
       (pExport->m_pBitmapInfo->bmiHeader.biSizeImage / pExport->m_pBitmapInfo->bmiHeader.biHeight), vars);
 }
@@ -251,7 +252,7 @@ BOOL __cdecl ES_VideoImportAudioDetails(void* pPluginDataIn, void* pMediaFileHan
 }
 
 BOOL __cdecl ES_VideoImportGetFrame(void* pPluginDataIn, void* pMediaFileHandleIn,
-    TES_PluginVideoImportGetFrame1* pGetFrame) {
+    TES_PluginVideoImportGetFrame2* pGetFrame) {
   return FALSE;
 }
 
@@ -293,4 +294,3 @@ BOOL __cdecl ES_VideoXMLPropertiesRead(void* pPluginDataIn, void* pFile, INT32 n
     TES_PluginVideoXMLPropertiesRead1* pPluginVideoXMLPropertiesRead) {
   return FALSE;
 }
-

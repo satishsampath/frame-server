@@ -37,6 +37,11 @@
 HINSTANCE ghInst;
 
 #define APPNAME L"DebugMode FrameServer"
+#if !defined(WIN64)
+  // This is defined in the CS5 sdk, so we define the same for CS4 to keep the code simple.
+  typedef long csSDK_int32;
+  typedef long csSDK_uint32;
+#endif
 
 // Define a placement new operator to use c++ objects with premiere's NewPtr allocator.
 void* operator new(size_t cbSize, void* pv) {
@@ -82,8 +87,8 @@ private:
   PrSDKSequenceAudioSuite* audioSuite;
   PrSDKPPixSuite* ppixSuite;
   PrSDKMemoryManagerSuite* memorySuite;
-  long videoRenderId;
-  long audioRenderId;
+  csSDK_uint32 videoRenderId;
+  csSDK_uint32 audioRenderId;
   exDoExportRec* exportRec;
   PrTime ticksPerFrame;
   PrPixelFormat pixelFormat[2];
@@ -213,11 +218,12 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
 
 #define ReturnIfError(x) result = (x); if (result != 0) return malUnknownError
 
+  HWND hwndParent = GetForegroundWindow();
   prMALError returnCode = malUnknownError;
   prSuiteError result;
 
   TCHAR filename[MAX_PATH] = L"";
-  long filenameLength = MAX_PATH;
+  csSDK_int32 filenameLength = MAX_PATH;
   ReturnIfError(exportFile->GetPlatformPath(rec->fileObject, &filenameLength, filename));
   if (filename[0] == 0)
     return malUnknownError;
@@ -264,7 +270,7 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
   DWORD numFrames = static_cast<DWORD>((rec->endTime - rec->startTime) / ticksPerFrame);
   exportRec = rec;
   Init(doAudio, samplingRate, 16, 2, numFrames, fps,
-      renderParams.inWidth, renderParams.inHeight, GetActiveWindow(), filename);
+      renderParams.inWidth, renderParams.inHeight, hwndParent, filename);
   bool rval = Run();
 
   renderSuite->ReleaseVideoRenderer(pluginId, videoRenderId);
@@ -287,7 +293,7 @@ void PremiereFSImpl::OnVideoRequest() {
       &renderParams, kRenderCacheType_None, &renderResult);
   if (result == suiteError_NoError) {
     char* pixels;
-    long rowBytes;
+    csSDK_int32 rowBytes;
     PrPixelFormat format;
     ppixSuite->GetPixelFormat(renderResult.outFrame, &format);
     ppixSuite->GetRowBytes(renderResult.outFrame, &rowBytes);
@@ -306,7 +312,7 @@ int PremiereFSImpl::ReadAudioSamples(int numSamples, short* audioShortData) {
 
   // Keep reading until we get all required samples or an error happens.
   do {
-    long maxBlip = 0;
+    csSDK_int32 maxBlip = 0;
     audioSuite->GetMaxBlip(audioRenderId, ticksPerFrame, &maxBlip);
     int samplesRemaining = numSamples - samplesRead;
     int samplesToRead = (maxBlip < samplesRemaining) ? maxBlip : samplesRemaining;
@@ -427,7 +433,11 @@ prMALError doBeginInstance(exportStdParms* stdParams, exExporterInstanceRec* rec
   // Initialize the object per c++
   fs = new (fs)PremiereFSImpl(basicSuite);
 
-  rec->privateData = reinterpret_cast<long>(fs);
+#if defined(WIN64)
+  rec->privateData = reinterpret_cast<void*>(fs);  // CS5 and above
+#else
+  rec->privateData = reinterpret_cast<long>(fs);  // CS4 and below
+#endif
 
   return malNoError;
 }

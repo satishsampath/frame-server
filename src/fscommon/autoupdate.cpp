@@ -78,12 +78,12 @@ void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, int bkcolorid) { // nb. vc7 ha
     ud->url = new TCHAR[_tcslen(url) + 1]; _tcscpy(ud->url, url);
   } else {HGLOBAL hglob = GlobalAlloc(GMEM_MOVEABLE, sizeof(TUrlData));
           TUrlData* ud = (TUrlData*)GlobalLock(hglob);
-          ud->oldproc = (WNDPROC)GetWindowLong(hctl, GWL_WNDPROC);
+          ud->oldproc = (WNDPROC)GetWindowLongPtr(hctl, GWLP_WNDPROC);
           ud->url = new TCHAR[_tcslen(url) + 1]; _tcscpy(ud->url, url);
           ud->hf = 0; ud->bkcolorid = 0;
           GlobalUnlock(hglob);
           SetProp(hctl, _T("href_dat"), hglob);
-          SetWindowLong(hctl, GWL_WNDPROC, (LONG)UrlCtlProc);}
+          SetWindowLongPtr(hctl, GWLP_WNDPROC, (LONG)UrlCtlProc);}
   //
   // Second we subclass the dialog
   hold = (HGLOBAL)GetProp(hdlg, _T("href_dlg"));
@@ -91,12 +91,12 @@ void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, int bkcolorid) { // nb. vc7 ha
     HGLOBAL hglob = GlobalAlloc(GMEM_MOVEABLE, sizeof(TUrlData));
     TUrlData* ud = (TUrlData*)GlobalLock(hglob);
     ud->url = 0;
-    ud->oldproc = (WNDPROC)GetWindowLong(hdlg, GWL_WNDPROC);
+    ud->oldproc = (WNDPROC)GetWindowLongPtr(hdlg, GWLP_WNDPROC);
     ud->bkcolorid = bkcolorid;
     ud->hf = 0; // the font will be created lazilly, the first time WM_CTLCOLORSTATIC gets called
     GlobalUnlock(hglob);
     SetProp(hdlg, _T("href_dlg"), hglob);
-    SetWindowLong(hdlg, GWL_WNDPROC, (LONG)UrlDlgProc);
+    SetWindowLongPtr(hdlg, GWLP_WNDPROC, (LONG)UrlDlgProc);
   }
   #pragma warning( pop )
 }
@@ -284,7 +284,7 @@ void HandleUpdateResponse(char* response) {
     RegSetValueEx(key, _T("nextUpdateCheckTime"), 0, REG_BINARY, (LPBYTE)&nextUpdateTime, sizeof(nextUpdateTime));
     if (updateUrlFound) {      // change what is in the registry only if we got a response from the server.
       if (_tcslen(updateUrl) > 0) {
-        RegSetValueEx(key, _T("updateUrl"), 0, REG_SZ, (LPBYTE)updateUrl, (_tcslen(updateUrl) + 1) * sizeof(TCHAR));
+        RegSetValueEx(key, _T("updateUrl"), 0, REG_SZ, (LPBYTE)updateUrl, (DWORD)(_tcslen(updateUrl) + 1) * sizeof(TCHAR));
       } else {
         RegDeleteValue(key, _T("updateUrl"));
       }
@@ -293,7 +293,7 @@ void HandleUpdateResponse(char* response) {
   }
 }
 
-BOOL CALLBACK DummyAboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+DLGPROCRET CALLBACK DummyAboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   return FALSE;
 }
 
@@ -331,7 +331,7 @@ bool FormatUpdateRequestUrl(TCHAR* updateUrl) {
     RpcStringFree((LPBYTE*)(&guidstrptr));
 #endif
 
-    RegSetValueEx(key, _T("installId"), 0, REG_SZ, (LPBYTE)guidstr, (_tcslen(guidstr) + 1) * sizeof(TCHAR));
+    RegSetValueEx(key, _T("installId"), 0, REG_SZ, (LPBYTE)guidstr, (DWORD)(_tcslen(guidstr) + 1) * sizeof(TCHAR));
   }
   RegCloseKey(key);
 
@@ -462,4 +462,3 @@ void CancelUpdateCheck() {
 
   updateCheckThreadHandle = NULL;
 }
-

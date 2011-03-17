@@ -98,7 +98,7 @@ DWORD WINAPI ImageSequenceExportThreadProc(LPVOID param) {
   return 0;
 }
 
-BOOL CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+DLGPROCRET CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   TCHAR copyright[1024];
 
   switch (msg) {
@@ -133,7 +133,7 @@ int CALLBACK DirBrowseDlgCallback(HWND wnd, UINT msg, LPARAM lp, LPARAM data) {
   return (msg == BFFM_VALIDATEFAILED) ? 1 : 0;
 }
 
-BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
   case WM_INITDIALOG: {
     SetFsIconForWindow(dlg);
@@ -232,7 +232,7 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       if (_tcsrchr(filepath, '.') != NULL)
         _tcsrchr(filepath, '.')[0] = 0;
 
-      int sel = SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
+      LRESULT sel = SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
       if (sel == 0) _tcscat(filepath, _T(".jpg"));
       if (sel == 1) _tcscat(filepath, _T(".png"));
       if (sel == 2) _tcscat(filepath, _T(".tif"));
@@ -253,16 +253,18 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       EndDialog(dlg, IDCANCEL);
 
     if (LOWORD(wp) == IDOK) {
-      // Check if the path and filenames are good enough
-      char dstpath[MAX_PATH * 2];
-      GetDlgItemTextA(dlg, IDC_IMAGESEQUENCEPATH, dstpath, sizeof(dstpath));
-      if (!LoadImageSequenceModule())
-        break;
-      fxnCheckAndPreparePath CheckAndPreparePath = (fxnCheckAndPreparePath)
-                                                   GetProcAddress(imageSequenceModule, "CheckAndPreparePath");
+      if (saveAsImageSequence) {
+        // Check if the path and filenames are good enough
+        char dstpath[MAX_PATH * 2];
+        GetDlgItemTextA(dlg, IDC_IMAGESEQUENCEPATH, dstpath, sizeof(dstpath));
+        if (!LoadImageSequenceModule())
+          break;
+        fxnCheckAndPreparePath CheckAndPreparePath = (fxnCheckAndPreparePath)
+                                                     GetProcAddress(imageSequenceModule, "CheckAndPreparePath");
 
-      if (!CheckAndPreparePath(dstpath))
-        break;
+        if (!CheckAndPreparePath(dstpath))
+          break;
+      }
 
       pcmAudioInAvi = IsDlgButtonChecked(dlg, IDC_PCMAUDIOINAVI);
       serveFormat = sfRGB24;
@@ -272,7 +274,7 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       networkPort = GetDlgItemInt(dlg, IDC_NETPORT, NULL, FALSE);
       saveAsImageSequence = IsDlgButtonChecked(dlg, IDC_OUTPUTIMAGESEQUENCE);
       GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath, sizeof(imageSequencePath));
-      imageSequenceFormat = SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
+      imageSequenceFormat = (UINT)SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
 
       HKEY key = 0;
       RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0, REG_OPTION_NON_VOLATILE,
@@ -284,7 +286,7 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         RegSetValueEx(key, _T("networkPort"), 0, REG_DWORD, (LPBYTE)&networkPort, sizeof(networkPort));
         RegSetValueEx(key, _T("saveAsImageSequence"), 0, REG_DWORD, (LPBYTE)&saveAsImageSequence, sizeof(saveAsImageSequence));
         RegSetValueEx(key, _T("imageSequenceFormat"), 0, REG_DWORD, (LPBYTE)&imageSequenceFormat, sizeof(imageSequenceFormat));
-        RegSetValueEx(key, _T("imageSequencePath"), 0, REG_SZ, (LPBYTE)imageSequencePath, (_tcslen(imageSequencePath) + 1) * sizeof(TCHAR));
+        RegSetValueEx(key, _T("imageSequencePath"), 0, REG_SZ, (LPBYTE)imageSequencePath, (DWORD)(_tcslen(imageSequencePath) + 1) * sizeof(TCHAR));
         RegCloseKey(key);
       }
       EndDialog(dlg, IDOK);
@@ -294,7 +296,7 @@ BOOL CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   return FALSE;
 }
 
-BOOL CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+DLGPROCRET CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
   case WM_INITDIALOG:
     SetFsIconForWindow(dlg);
@@ -308,7 +310,7 @@ BOOL CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   return FALSE;
 }
 
-BOOL CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
   case WM_INITDIALOG:
     SetFsIconForWindow(dlg);
@@ -805,3 +807,4 @@ bool FrameServerImpl::Run() {
 
   return true;
 }
+
