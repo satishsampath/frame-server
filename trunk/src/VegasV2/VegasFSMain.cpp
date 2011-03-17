@@ -19,6 +19,7 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
+#include <TCHAR.H>
 #include <objbase.h>
 #include <initguid.h>
 #include "SfBase.h"
@@ -62,7 +63,7 @@ private:
   ULONG m_cRef;
 };
 
-PluginInfo::PluginInfo() : m_cRef(1) {
+PluginInfo::PluginInfo() : m_cRef(0) {
 }
 
 PluginInfo::~PluginInfo() {
@@ -78,17 +79,16 @@ STDMETHODIMP PluginInfo::QueryInterface(REFIID riid, LPVOID* ppvObj) {
 }
 
 STDMETHODIMP_(ULONG) PluginInfo::AddRef() {
-  InterlockedIncrement((long*)&m_cRef);
-  return m_cRef;
+  return InterlockedIncrement((long*)&m_cRef);
 }
 
 STDMETHODIMP_(ULONG) PluginInfo::Release() {
-  InterlockedDecrement((long*)&m_cRef);
-  if (m_cRef == 0) {
+  LONG cRef = InterlockedDecrement((long*)&m_cRef);
+  if(cRef == 0)
+  {
     SfDelete this;
-    return 0;
   }
-  return m_cRef;
+  return cRef;
 }
 
 STDMETHODIMP PluginInfo::Init(LPCWSTR key, DWORD appGrade, BOOL demo) {
@@ -160,17 +160,16 @@ STDMETHODIMP CClassFactory::QueryInterface(REFIID riid, void** ppv) {
 }
 
 STDMETHODIMP_(ULONG) CClassFactory::AddRef() {
-  InterlockedIncrement((long*)&m_cRef);
-  return m_cRef;
+  return InterlockedIncrement((long*)&m_cRef);
 }
 
 STDMETHODIMP_(ULONG) CClassFactory::Release() {
-  InterlockedDecrement((long*)&m_cRef);
-  if (0 == m_cRef) {
+  LONG cRef = InterlockedDecrement((long*)&m_cRef);
+  if(cRef == 0)
+  {
     SfDelete this;
-    return 0;
   }
-  return m_cRef;
+  return cRef;
 }
 
 STDMETHODIMP CClassFactory::CreateInstance(LPUNKNOWN outer, REFIID riid, void** ppv) {
@@ -179,18 +178,27 @@ STDMETHODIMP CClassFactory::CreateInstance(LPUNKNOWN outer, REFIID riid, void** 
 
   HRESULT hr = E_NOINTERFACE;
   *ppv = NULL;
+
   if (CLSID_ExampleMediaType == m_rclsid) {
     if (IsEqualIID(__uuidof(ISfRenderFileClass), riid)) {
       VegasFS* fs = SfNew VegasFS;
-      hr = fs->QueryInterface(riid, ppv);
-      fs->Release();
+      if (fs) {
+        hr = fs->QueryInterface(riid, ppv);
+      } else {
+        hr = E_OUTOFMEMORY;
+      }
     }
   } else if (CLSID_SfMediaGetUnsharedTypeInfo == m_rclsid) {
     if (IsEqualIID(__uuidof(ISfUnsharedFIOPluginInfo), riid) ||
         IsEqualIID(IID_IUnknown, riid)) {
       PluginInfo* pClass = SfNew PluginInfo;
-      hr = pClass->QueryInterface(riid, ppv);
-      pClass->Release();
+      if (pClass) {
+        hr = pClass->QueryInterface(riid, ppv);
+        if (FAILED(hr))
+		      pClass->Release();
+      } else {
+        hr = E_OUTOFMEMORY;
+      }
     }
   }
 
@@ -224,10 +232,13 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv) {
 
   if (IsEqualIID(IID_IClassFactory, riid) || IsEqualIID(IID_IUnknown, riid)) {
     CClassFactory* pFactory = SfNew CClassFactory(rclsid);
-    hr = pFactory->QueryInterface(riid, ppv);
-    pFactory->Release();
+    if(pFactory) {
+      hr = pFactory->QueryInterface(riid, ppv);
+      pFactory->Release();
+    } else {
+      hr = E_OUTOFMEMORY;
+    }
   }
-
   return hr;
 }
 

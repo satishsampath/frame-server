@@ -394,9 +394,9 @@ DWORD WINAPI UpdateCheckThreadProc(LPVOID param) {
         if (updateCheckInternetHandle != NULL) {
           connected = true;
 
-          char response[2000];
+          char response[4000];
           DWORD responseSize = 0;
-          if (InternetReadFile(updateCheckInternetHandle, response, sizeof(response), &responseSize)) {
+          if (InternetReadFile(updateCheckInternetHandle, response, sizeof(response)-1, &responseSize)) {
             response[responseSize] = 0;
             HandleUpdateResponse(response);
           }

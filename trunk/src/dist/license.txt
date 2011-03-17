@@ -1,7 +1,8 @@
 License agreement for DebugMode FrameServer
 -------------------------------------------------
 
-Copyright © 2000-2009 Satish Kumar. S
+Copyright © 2000-2011 Satish Kumar. S
+Copyright © 2011 Victor Tchistiak
 http://www.debugmode.com/
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the author be held liable for any consequences/damages arising from the use of this software.

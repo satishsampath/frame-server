@@ -20,6 +20,7 @@
  */
 
 #include <windows.h>
+#include <TCHAR.H>
 #include "SfBase.h"
 #include "SfMem.h"
 #include "SfReadStream.h"
@@ -42,7 +43,7 @@ VegasFSRender::~VegasFSRender() {
 }
 
 STDMETHODIMP VegasFSRender::Init() {
-  m_pReadStreams = new SfReadStreams;
+  m_pReadStreams = SfNew SfReadStreams;
   return S_OK;
 }
 
@@ -57,17 +58,16 @@ STDMETHODIMP VegasFSRender::QueryInterface(REFIID riid, LPVOID* ppvObj) {
 }
 
 STDMETHODIMP_(ULONG) VegasFSRender::AddRef() {
-  InterlockedIncrement((long*)&m_dwRef);
-  return m_dwRef;
+  return InterlockedIncrement((long*)&m_dwRef);
 }
 
 STDMETHODIMP_(ULONG) VegasFSRender::Release() {
-  InterlockedDecrement((long*)&m_dwRef);
-  if (0 == m_dwRef) {
-    delete this;
-    return 0;
+  LONG cRef = InterlockedDecrement((long*)&m_dwRef);
+  if(cRef == 0)
+  {
+    SfDelete this;
   }
-  return m_dwRef;
+  return cRef;
 }
 
 STDMETHODIMP VegasFSRender::GetRenderFileClass(ISfRenderFileClass** ppClass) {

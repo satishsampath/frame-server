@@ -184,6 +184,8 @@ FunctionEnd
 Function preVegasDirPage
   SectionGetFlags ${secVegasPlug} $R0
   Call AbortIfSectionNotSelected
+  IfFileExists "$PROGRAMFILES64\Sony\Vegas Pro 10.0\*.*" vegas100x64
+  IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 10.0\*.*" vegas100
   IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 9.0\*.*" vegas90
   StrCpy $INSTDIR "$PROGRAMFILES\Sony\Shared Plug-Ins\*.*"
   IfFileExists "$INSTDIR\*.*" funcend
@@ -191,6 +193,13 @@ Function preVegasDirPage
   Goto funcend
 vegas90:
   StrCpy $INSTDIR "$PROGRAMFILES\Sony\Vegas Pro 9.0"
+  Goto funcend
+vegas100:
+  StrCpy $INSTDIR "$PROGRAMFILES\Sony\Vegas Pro 10.0"
+  Goto funcend
+vegas100x64:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Sony\Vegas Pro 10.0"
+  Goto funcend
 funcend:
 FunctionEnd
 
