@@ -1,6 +1,11 @@
 Change log
 ----------
 
+version 2.10
+-----------
+
+- By Victor T. - Added support for Adobe Premiere Elements 8 and 9
+
 version 2.9
 -----------
 
@@ -122,3 +127,4 @@ Version 1.5.0
 Version 1.4.1
 -------------
 1. First version, only for Vegas/Vegas Video/Video Factory.
+

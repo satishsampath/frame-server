@@ -23,7 +23,10 @@
 #include <vfw.h>
 #include "ImageSequence.h"
 
+#if !defined(WIN64)
 typedef unsigned long ULONG_PTR;
+#endif
+
 #include <gdiplus.h>
 using namespace Gdiplus;
 

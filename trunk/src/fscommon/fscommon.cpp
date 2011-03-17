@@ -68,7 +68,11 @@ bool LoadImageSequenceModule() {
 
   TCHAR libpath[MAX_PATH];
   _tcscpy(libpath, installDir);
+#if defined(WIN64)
+  _tcscat(libpath, _T("\\ImageSequence-x64.dll"));
+#else
   _tcscat(libpath, _T("\\ImageSequence.dll"));
+#endif
   imageSequenceModule = LoadLibrary(libpath);
   if (!imageSequenceModule) {
     MessageBox(NULL, _T("Unable to load \"ImageSequence.dll\".\n\n")

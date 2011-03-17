@@ -3,11 +3,11 @@ README for DebugMode FrameServer
 
 This file is a part of the setup distribution. If you are reading this file now, you have already installed DebugMode FrameServer. This has been tested with many third party software, including
 
-Sony Vegas 10, 9, 6.0, 5.0, 4.0/SonicFoundry Vegas Video 3.0
-Adobe Premiere CS5, CS4, 6.0/6.5, Premiere Pro 1.0/1.5, Premiere Elements 1.0
-Ulead MediaStudio Pro 7.0
-Ulead VideoStudio 8.0
-Pure Motion EditStudio 4.1.3
+Sony Vegas 10, 9, 6, 5
+Adobe Premiere CS5, CS4, 6/6.5, Premiere Elements 8, 9
+Ulead MediaStudio Pro 7
+Ulead VideoStudio 8
+Media Chance EditStudio 6
 Windows media player
 VirtualDub
 Avisynth
@@ -115,3 +115,4 @@ Frameserver User Forums at debugmode.com
 
 Thanks
 Satish
+
