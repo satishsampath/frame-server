@@ -1,10 +1,18 @@
 Change log
 ----------
 
+version 2.11
+-----------
+
+- By Victor T. - Corrected issue with interlaced video Adobe Premiere CS5 (it may correct Element 9 as well)
+
+
 version 2.10
 -----------
 
 - By Victor T. - Added support for Adobe Premiere Elements 8 and 9
+- By Victor T. - Corrected all other plugin installs folders (broken v.2.9)
+
 
 version 2.9
 -----------
@@ -127,4 +135,3 @@ Version 1.5.0
 Version 1.4.1
 -------------
 1. First version, only for Vegas/Vegas Video/Video Factory.
-

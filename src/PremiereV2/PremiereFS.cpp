@@ -196,7 +196,8 @@ prMALError PremiereFSImpl::queryOutputSettings(exQueryOutputSettingsRec* rec) {
     rec->outVideoAspectNum = param.mInt32;
     exportInfo->GetExportSourceInfo(pluginId, kExportInfo_PixelAspectDenominator, &param);
     rec->outVideoAspectDen = param.mInt32;
-    rec->outVideoFieldType = prFieldsNone;
+    exportInfo->GetExportSourceInfo(pluginId, kExportInfo_VideoFieldType, &param);
+    rec->outVideoFieldType = param.mInt32;
   }
   if (rec->inExportAudio) {
     exParamValues sampleRate;
@@ -254,7 +255,8 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
   int samplingRate = (int)(paramValue.value.floatValue + 0.5);
 
   renderParams.inRenderQuality = kPrRenderQuality_Max;
-  renderParams.inFieldType = prFieldsNone;
+  ReturnIfError(exportInfo->GetExportSourceInfo(pluginId, kExportInfo_VideoFieldType, &param));
+  renderParams.inFieldType = param.mInt32;
   renderParams.inDeinterlace = 0;
   renderParams.inDeinterlaceQuality = kPrRenderQuality_Max;
   renderParams.inCompositeOnBlack = 0;
