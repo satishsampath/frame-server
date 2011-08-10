@@ -1,23 +1,26 @@
 Change log
 ----------
 
+version 2.12
+-----------
+
+- Corrected issue with alpha channels and audio clipping. (Victor T)
+
 version 2.11
 -----------
 
-- By Victor T. - Corrected issue with interlaced video Adobe Premiere CS5 (it may correct Element 9 as well)
-
+- Corrected issue with interlaced video Adobe Premiere CS5 (it may correct Element 9 as well) (Victor T)
 
 version 2.10
 -----------
 
-- By Victor T. - Added support for Adobe Premiere Elements 8 and 9
-- By Victor T. - Corrected all other plugin installs folders (broken v.2.9)
-
+- Added support for Adobe Premiere Elements 8 and 9 (Victor T)
+- Corrected all other plugin installs folders (broken v.2.9) (Victor T)
 
 version 2.9
 -----------
 
-- By Victor T. - Added support for Premiere CS5:
+- Added support for Premiere CS5: (Victor T)
 64-bit:native plugin
 
 Known Issues:
@@ -26,7 +29,7 @@ Known Issues:
 version 2.8
 -----------
 
-- By Victor T. - Added support for Vegas 10:  
+- Added support for Vegas 10:  (Victor T)
 32-bit:native
 64-bit:via built-in Vegas x86 FileIOSurrogate.exe
 
