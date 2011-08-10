@@ -259,7 +259,7 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
   renderParams.inFieldType = param.mInt32;
   renderParams.inDeinterlace = 0;
   renderParams.inDeinterlaceQuality = kPrRenderQuality_Max;
-  renderParams.inCompositeOnBlack = 0;
+  renderParams.inCompositeOnBlack = kPrTrue;
 
   audioFloatData[0] = reinterpret_cast<float*>(memorySuite->NewPtr(sizeof(float) * samplingRate));
   audioFloatData[1] = reinterpret_cast<float*>(memorySuite->NewPtr(sizeof(float) * samplingRate));
@@ -322,7 +322,7 @@ int PremiereFSImpl::ReadAudioSamples(int numSamples, short* audioShortData) {
       audioFloatData[0] + samplesRead,
       audioFloatData[1] + samplesRead
     };
-    result = audioSuite->GetAudio(audioRenderId, samplesToRead, buffers, kPrFalse);
+    result = audioSuite->GetAudio(audioRenderId, samplesToRead, buffers, kPrTrue);
     if (result == malNoError) {
       samplesRead += samplesToRead;
     }
