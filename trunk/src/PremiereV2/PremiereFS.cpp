@@ -254,11 +254,11 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
   exportParam->GetParamValue(pluginId, 0, ADBEAudioRatePerSecond, &paramValue);
   int samplingRate = (int)(paramValue.value.floatValue + 0.5);
 
-  renderParams.inRenderQuality = kPrRenderQuality_Max;
+  renderParams.inRenderQuality = kPrRenderQuality_High;
   ReturnIfError(exportInfo->GetExportSourceInfo(pluginId, kExportInfo_VideoFieldType, &param));
   renderParams.inFieldType = param.mInt32;
   renderParams.inDeinterlace = 0;
-  renderParams.inDeinterlaceQuality = kPrRenderQuality_Max;
+  renderParams.inDeinterlaceQuality = kPrRenderQuality_High;
   renderParams.inCompositeOnBlack = kPrTrue;
 
   audioFloatData[0] = reinterpret_cast<float*>(memorySuite->NewPtr(sizeof(float) * samplingRate));
