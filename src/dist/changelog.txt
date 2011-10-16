@@ -1,6 +1,11 @@
 Change log
 ----------
 
+version 2.13
+-----------
+
+- Improved rendering speed in Premiere with an idea about tweaking quality settings (Victor T)
+
 version 2.12
 -----------
 
