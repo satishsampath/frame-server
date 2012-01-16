@@ -1,4 +1,5 @@
 Import('env_vc9')
+Import('env_vc9_x64')
 
 # ---- libFileIO ----
 fio_env = env_vc9.Clone()
@@ -51,3 +52,55 @@ if not env['dbg']:
   env.AddPostAction(bin,
     'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
 env.Install('#/src/dist/bin', bin[0])
+
+# ---- libFileIO ----
+fio_env64 = env_vc9_x64.Clone()
+
+fio_env64['CPPDEFINES'] += ['_LIB']
+fio_env64['CPPPATH'] = ['../sdks/VegasV2/libFileIO']
+fio_env64['LIBS'].remove('common.lib')
+fio_env64['LIBS'] += ['rpcrt4.lib']
+fio_env64['LINKFLAGS'] += ['/IGNOREIDL']
+
+target = 'libFileIO_x64'
+fio_env64['PDB'] = target + '.pdb'
+bin = fio_env64.Library(
+  target,
+  [
+    fio_env64.Object('SfAudioUtil64', '../sdks/VegasV2/libFileIO/SfAudioUtil.cpp'),
+    fio_env64.Object('SfMem64', '../sdks/VegasV2/libFileIO/SfMem.cpp'),
+    fio_env64.Object('SfReadStreams64', '../sdks/VegasV2/libFileIO/SfReadStreams.cpp'),
+    fio_env64.Object('SfTemplate64', '../sdks/VegasV2/libFileIO/SfTemplate.cpp'),
+    fio_env64.Object('SfWaveFormat64', '../sdks/VegasV2/libFileIO/SfWaveFormat.cpp')
+  ]
+)
+
+# ---- VegasV2 ----
+env64 = env_vc9_x64.Clone()
+
+env64['CPPDEFINES'] += ['_USRDLL']
+env64['CPPPATH'] = ['../sdks/VegasV2/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
+env64['LIBS'].remove('common.lib')
+env64['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode_x64.lib', 'libfileio_x64.lib']
+env64['LIBPATH'] += ['../VegasV2']
+env64['LINKFLAGS'] += ['/IGNOREIDL']
+
+target = 'dfscVegasV264Out'
+env64['PDB'] = target + '.pdb'
+bin = env64.SharedLibrary(
+  target,
+  [
+    env64.Object('VegasFSMain64', 'VegasFSMain.cpp'),
+    env64.Object('VegasFS64', 'VegasFS.cpp'),
+    env64.Object('VegasFSRender64', 'VegasFSRender.cpp'),
+    'VegasFS.def',
+    env64.RES('VegasFS.rc64', 'VegasFS.rc'),
+  ]
+)
+
+# Add a post-build step to embed the manifest using mt.exe
+# The number at the end of the line indicates the file type (1: EXE; 2:DLL).
+if not env64['dbg']:
+  env64.AddPostAction(bin,
+    'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
+env64.Install('#/src/dist/bin', bin[0])

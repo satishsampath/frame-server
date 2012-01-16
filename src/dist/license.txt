@@ -1,16 +1,23 @@
 License agreement for DebugMode FrameServer
 -------------------------------------------------
 
-Copyright © 2000-2011 Satish Kumar. S
-Copyright © 2011 Victor Tchistiak
+Copyright © 2000-2012 Satish Kumar. S and contributors
 http://www.debugmode.com/
 
-This software is provided 'as-is', without any express or implied warranty. In no event will the author be held liable for any consequences/damages arising from the use of this software.
+Contributors:
+- Victor Tchistiak
 
-This program and the accompanied DLLs/plugins are FREEWARE.  You can use it for personal, business, educational or any other need of yours, subject to the following restrictions:
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
 
-1. You may not re-distribute this program without contacting the author and getting his consent. You may not charge any fee or re-distribution fee for it.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-2. This notice may not be removed or altered from any distribution.
-
-3. No form of decompilation/reverse engineering/disassembling parts or whole of the software be done.
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+http://www.gnu.org/copyleft/gpl.html

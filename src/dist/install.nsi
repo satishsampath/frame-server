@@ -13,6 +13,7 @@ Page license
 Page components "" "" postComponentsPage
 Page directory preCoreDirPage "" postCoreDirPage
 Page directory preVegasDirPage showVegasDirPage postVegasDirPage
+Page directory preVegas64DirPage showVegas64DirPage postVegas64DirPage
 Page directory prePremiereCS5DirPage showPremiereCS5DirPage postPremiereCS5DirPage
 Page directory prePremiereDirPage showPremiereDirPage postPremiereDirPage
 Page directory preMsproDirPage showMsproDirPage postMsproDirPage
@@ -84,13 +85,12 @@ Section "DebugMode FrameServer Core (required)" secCore
   SectionIn 1 RO
   StrCpy $FsInstallDir "$0"
   SetOutPath "$0"
-  File readme.txt
-  File changelog.txt
   File Bin\fscommon.dll
   File Bin\ImageSequence.dll
   File Bin\DFsNetClient.exe
   File Bin\DFsNetServer.exe
   File Bin\dfscVegasV2Out.dll
+  File Bin\dfscVegasV264Out.dll
   WriteUninstaller "$0\fsuninst.exe"
 
   SetOutPath "$SYSDIR"
@@ -111,8 +111,6 @@ Section "DebugMode FrameServer Core (required)" secCore
   MessageBox MB_YESNO "Create a Program Group in the Start Menu?" IDNO lblAfterProgramGroup
     CreateDirectory "$SMPROGRAMS\Debugmode\FrameServer"
     CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\FrameServer Network Client.lnk" "$0\DFsNetClient.exe" 0 "$0\fscommon.dll"
-    CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\ChangeLog.lnk" "$0\changelog.txt"
-    CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\Readme.lnk" "$0\readme.txt"
     CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\Uninstall FrameServer.lnk" "$0\fsuninst.exe"
   lblAfterProgramGroup:
 SectionEnd
@@ -135,6 +133,22 @@ Section /o "Sony® Vegas® Plugin" secVegasPlug
     SetOutPath "$1"
     File bin\dfscVegasOut.dll
     RegDLL "$1\dfscVegasOut.dll"
+  funcend:
+SectionEnd
+
+Section /o "Sony® Vegas® (64-bit) Plugin" secVegas64Plug
+  IfFileExists "$8\vegas*.exe" 0 funcend
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV264PlugConfig Path" "$8\Frameserver.x64.fio2007-config"
+    ClearErrors
+    FileOpen $R0 "$8\Frameserver.x64.fio2007-config" w
+    FileWrite $R0 "[FileIO Plug-Ins]"
+    FileWriteByte $R0 "13"
+    FileWriteByte $R0 "10"
+    FileWrite $R0 "frameserver=$FsInstallDir\dfscVegasV264Out.dll"
+    FileClose $R0
+    IfErrors 0 funcend
+      MessageBox MB_OK|MB_ICONSTOP "Unable to create file $8\Frameserver.x64.fio2007-config"
+      Goto funcend
   funcend:
 SectionEnd
 
@@ -207,6 +221,7 @@ FunctionEnd
 Function preVegasDirPage
   SectionGetFlags ${secVegasPlug} $R0
   Call AbortIfSectionNotSelected
+  IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 11.0\*.*" vegas110
   IfFileExists "$PROGRAMFILES64\Sony\Vegas Pro 10.0\*.*" vegas100x64
   IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 10.0\*.*" vegas100
   IfFileExists "$PROGRAMFILES\Sony\Vegas Pro 9.0\*.*" vegas90
@@ -220,9 +235,22 @@ vegas90:
 vegas100:
   StrCpy $INSTDIR "$PROGRAMFILES\Sony\Vegas Pro 10.0"
   Goto funcend
+vegas110:
+  StrCpy $INSTDIR "$PROGRAMFILES\Sony\Vegas Pro 11.0"
+  Goto funcend
 vegas100x64:
   StrCpy $INSTDIR "$PROGRAMFILES64\Sony\Vegas Pro 10.0"
   Goto funcend
+funcend:
+FunctionEnd
+
+Function preVegas64DirPage
+  SectionGetFlags ${secVegas64Plug} $R0
+  Call AbortIfSectionNotSelected
+  IfFileExists "$PROGRAMFILES64\Sony\Vegas Pro 11.0\*.*" vegas110x64
+  Goto funcend
+vegas110x64:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Sony\Vegas Pro 11.0"
 funcend:
 FunctionEnd
 
@@ -325,6 +353,11 @@ Function showVegasDirPage
   Call SetPageTextString
 FunctionEnd
 
+Function showVegas64DirPage
+  Push "Select where to install Sony® Vegas® (64-bit) Plugin"
+  Call SetPageTextString
+FunctionEnd
+
 Function showPremiereCS5DirPage
   Push "Select where to install Adobe® Premiere® CS5 (64-bit) Plugin"
   Call SetPageTextString
@@ -352,6 +385,9 @@ FunctionEnd
 
 Function postComponentsPage
   SectionGetFlags ${secVegasPlug} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "${SF_SELECTED}" noabort
+  SectionGetFlags ${secVegas64Plug} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
   StrCmp $R0 "${SF_SELECTED}" noabort
   SectionGetFlags ${secPremCS5Plug} $R0
@@ -423,11 +459,15 @@ Function postWaxDirPage
   StrCpy $INSTDIR $0
 FunctionEnd
 
+Function postVegas64DirPage
+  Call AbortIfInvalidInstDir
+  StrCpy $8 $INSTDIR
+  StrCpy $INSTDIR $0
+FunctionEnd
+
+
 Function .onInstSuccess
   DeleteRegValue HKEY_CURRENT_USER "SOFTWARE\DebugMode\FrameServer" "updateUrl"
-  MessageBox MB_YESNO "View readme?" IDNO NoReadme
-  Exec 'notepad.exe "$0\readme.txt"'
-  NoReadme:
 FunctionEnd
   
 ;----------- begin uninstall settings/section ----------------
@@ -454,6 +494,10 @@ Section Uninstall
   Delete "$R7"
   Delete "$R8"
   Delete "$R9"
+  ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV264Plug Path"
+  ReadRegStr $R2 HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV264PlugConfig Path"
+  Delete "$R1"
+  Delete "$R2"
   Delete "$INSTDIR\dfscVegasV2Out.dll"
   Delete "$INSTDIR\DFsNetClient.exe"
   Delete "$INSTDIR\fsuninst.exe"
@@ -473,14 +517,14 @@ Section Uninstall
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "UVStudioPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "EditstudioPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "WaxPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV264Plug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "VegasV264PlugConfig Path"
   DeleteIniStr System.ini, drivers32, vidc.dfsc
   DeleteIniStr System.ini, drivers32, msacm.dfscacm
   DeleteIniStr Control.ini, drivers.desc, dfsc.dll
   DeleteIniStr Control.ini, drivers.desc, dfscacm.dll
   Delete "$SMPROGRAMS\Debugmode\FrameServer\*.*"
   RMDir "$SMPROGRAMS\Debugmode\FrameServer"
-  Delete "$INSTDIR\readme.txt"
-  Delete "$INSTDIR\changelog.txt"
   Delete "$INSTDIR\fscommon.dll"
   Delete "$INSTDIR\ImageSequence.dll"
   Delete "$INSTDIR\DFsNetClient.exe"
