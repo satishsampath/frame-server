@@ -39,6 +39,10 @@ const GUID CLSID_VegasFS = {
 const GUID GUID_FrameServerPreset = {
   0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb3 }
 };
+// {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB4}
+const GUID GUID_FrameServerPreset1 = {
+  0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb4 }
+};
 
 #define TEMPLATE_MINOR_VERSION   (2 << 16)
 #define TEMPLATE_SUB_VERSION     (0 << 8)
@@ -264,7 +268,7 @@ STDMETHODIMP VegasFS::GetPresetCount(LONG* pcPresets) {
   HRESULT hr = S_OK;
 
   if (pcPresets) {
-    *pcPresets = 1;
+    *pcPresets = 2;
     hr = S_OK;
   } else {
     hr = E_INVALIDARG;
@@ -336,10 +340,17 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
     LONG ixPreset) {
   HRESULT hr = S_OK;
 
-  if (ppTemplate && ixPreset <= 0) {
-    TCHAR sName[MAX_PATH] = L"Project Default";
-    TCHAR sDesc[MAX_PATH] = L"Default";
-
+  if (ppTemplate && ixPreset <= 1) {
+    TCHAR sName[MAX_PATH];
+    TCHAR sDesc[MAX_PATH];
+    if (ixPreset <= 0)
+    {
+      _tcscpy(sName,L"Project Default");
+      _tcscpy(sDesc,L"Default");
+    } else {
+      _tcscpy(sName,L"Project Default");
+      _tcscpy(sDesc,L"Default");
+    }
     if (SUCCEEDED(hr)) {
       hr = AllocateTemplate(ppTemplate,
           sizeof(ExtraEncoderParameter),
@@ -351,7 +362,10 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
 
         pTemplate->id = ixPreset;
         pTemplate->iidOwner = CLSID_VegasFS;
-        pTemplate->guid = GUID_FrameServerPreset;
+        if (ixPreset <= 0)
+          pTemplate->guid = GUID_FrameServerPreset;
+        else
+          pTemplate->guid = GUID_FrameServerPreset1;
 
         // audio
         pTemplate->Audio.cbStruct = NUMBYTES(pTemplate->Audio);
@@ -407,6 +421,9 @@ STDMETHODIMP VegasFS::GetPresetIndexFromGuid(const GUID* pGuid,
   if (pGuid && pixPreset) {
     if (*pGuid == GUID_FrameServerPreset) {
       *pixPreset = 0;
+      hr = S_OK;
+    } else if (*pGuid == GUID_FrameServerPreset1) {
+      *pixPreset = 1;
       hr = S_OK;
     }
   } else {
@@ -509,6 +526,15 @@ STDMETHODIMP VegasFS::ConformTemplateToSource(PSFTEMPLATEx* pptpl,
     if (*pptpl) {
       memset(*pptpl, 0, ptplBase->cbStruct);
       CopyMemory(*pptpl, ptplBase, ptplBase->cbStruct);
+      if ((*pptpl)->Video.Render.bih.biWidth == 0)
+      {
+        (*pptpl)->Video.Render.bih = ptplSource->Video.Render.bih;
+        (*pptpl)->Video.Render.bih.biCompression = BI_RGB;
+        (*pptpl)->Video.Render.bih.biPlanes = 1;
+        (*pptpl)->Video.Render.bih.biBitCount = 32;
+       }
+      if (ptplBase->Video.Render.vex.dFPS == 0.0)
+        (*pptpl)->Video.Render.vex = ptplSource->Video.Render.vex;
     } else {
       hr = E_OUTOFMEMORY;
     }
@@ -522,7 +548,7 @@ STDMETHODIMP VegasFS::ConformTemplateToSource(PSFTEMPLATEx* pptpl,
 
     if ((*pptpl)->Video.Render.bih.biBitCount == 0) {
       (*pptpl)->Video.Render.bih.biBitCount = ptplSource->Video.Render.bih.biBitCount;
-      (*pptpl)->Video.Render.bih.biCompression = BI_RGB ;
+      (*pptpl)->Video.Render.bih.biCompression = BI_RGB;
     }
 
     if ((*pptpl)->Video.Codec.bih.biWidth == 0) {

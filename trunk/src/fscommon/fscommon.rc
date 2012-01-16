@@ -113,12 +113,12 @@ BEGIN
     LTEXT           "Web :",IDC_STATIC,7,123,20,8
     LTEXT           "http://www.debugmode.com/",IDC_WEBPAGE,32,123,96,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,261,1
-    LTEXT           "DebugMode FrameServer © 2000-20011 Satish Kumar\r\n                                          © 2011 Victor Tchistiak",
+    LTEXT           "© 2000-2012 Satish Kumar. S and contributors\r\nContributors: Victor Tchistiak",
                     IDC_STATIC,7,29,184,20
     EDITTEXT        IDC_WARNING,16,53,210,68,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "2.13",IDC_VERSION,206,29,15,8
+    LTEXT           "2.14",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -292,7 +292,7 @@ IDI_FRAMESERVER         ICON    DISCARDABLE     "fs.ico"
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ABOUTDLG_COPYRIGHT  "This program is a FREEWARE.  You can use it for personal, business, educational or any other need of yours.\r\n\r\nYou may not re-distribute this program without contacting the author and getting his consent. You may not charge any fee or re-distribution fee for it.\r\n\r\nThis program is distributed as is without warranty. The author does not take responsibility for any consequences that might arise directly or indirectly because of using this program."
+    IDS_ABOUTDLG_COPYRIGHT  "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. http://www.gnu.org/copyleft/gpl.html"
 END
 
 #endif    // English (U.S.) resources
