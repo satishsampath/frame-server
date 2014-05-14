@@ -33,6 +33,7 @@ DirText "Installation Directory" "Select where to install DebugMode FrameServer 
 Var FsInstallDir
 Var UsePremiereV2
 Var UsePremiereV2EL
+Var UsePremiereV264EL
 Var UsePremiereV2CS5
 
 ;--------------------------------------------
@@ -167,6 +168,15 @@ Section /o "Adobe® Premiere®/Pro/Elements Plugin" secPremPlug
     File bin\dfscPremiereOut.prm
     Goto funcend
   precs4EL:
+    IntCmp $UsePremiereV264EL 1 0 precs4EL9
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$3\Plug-ins\en_US\dfscPremiereOutCS5.prm"
+    WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlugEPR Path" "$3\sharingcenter\Presets\pc\OTHERS\DMFS\DMFS.epr"
+    SetOutPath "$3\Plug-ins\en_US"
+    File bin\dfscPremiereOutCS5.prm
+    SetOutPath "$3\sharingcenter\Presets\pc\OTHERS\DMFS"
+    File bin\DMFS.epr
+    Goto funcend
+  precs4EL9:
     IntCmp $UsePremiereV2EL 1 0 precs4
     WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlug Path" "$3\Plug-ins\en_US\dfscPremiereOut.prm"
     WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\DebugMode\FrameServer" "PremPlugEPR Path" "$3\sharingcenter\Presets\pc\OTHERS\DMFS\DMFS.epr"
@@ -281,7 +291,10 @@ Function prePremiereDirPage
   Pop $UsePremiereV2
   Push 0
   Pop $UsePremiereV2EL
+  Push 0
+  Pop $UsePremiereV264EL
   Strcpy $INSTDIR "$PROGRAMFILES"
+  IfFileExists "$PROGRAMFILES64\Adobe\Adobe Premiere Elements 10\*.*" vElem100present
   IfFileExists "$PROGRAMFILES\Adobe\Adobe Premiere Elements 9\*.*" vElem90present
   IfFileExists "$PROGRAMFILES\Adobe\Adobe Premiere Elements 8\*.*" vElem80present
   IfFileExists "$PROGRAMFILES\Adobe\Premiere Elements 1.0\*.*" vElem10present
@@ -304,6 +317,13 @@ Function prePremiereDirPage
     Goto funcend
   vElem10present:
     StrCpy $INSTDIR "$PROGRAMFILES\Adobe\Premiere Elements 1.0\Plug-ins\en_US"
+    Goto funcend
+  vElem100present:
+    Push 1
+    Pop $UsePremiereV264EL
+    StrCpy $INSTDIR "$PROGRAMFILES64\Adobe\Adobe Premiere Elements 10"
+    IfFileExists "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS\*.*" funcend
+    CreateDirectory "$INSTDIR\sharingcenter\Presets\pc\OTHERS\DMFS"
     Goto funcend
   vElem90present:
     Push 1
