@@ -1,4 +1,6 @@
 Import('env')
+Import('env_vc9_x64')
+
 env = env.Clone()
 
 env['CPPDEFINES'] += ['_USRDLL', 'DFSCACM_EXPORTS']
@@ -14,3 +16,19 @@ bin = env.SharedLibrary(
   ]
 )
 env.Install('#/src/dist/bin', bin[0])
+
+env64 = env_vc9_x64.Clone()
+
+env64['CPPDEFINES'] += ['_USRDLL', 'DFSCACM_EXPORTS']
+
+target64 = 'dfscacm64'
+env64['PDB'] = target64 + '.pdb'
+bin = env64.SharedLibrary(
+  target64,
+  [
+    'codec.c',
+    'dfscacm.def',
+    env64.RES('codec.rc')
+  ]
+)
+env64.Install('#/src/dist/bin', bin[0])
