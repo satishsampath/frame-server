@@ -30,7 +30,8 @@
 //
 //==========================================================================;
 
-#define DWORD_PTR DWORD
+//#define DWORD_PTR DWORD
+#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <windowsx.h>
 #include <mmsystem.h>
@@ -131,16 +132,16 @@ void DestroyAdec(DfscAdec* adec) {
 int CreateAdec(DfscAdec* adec, DWORD stream) {
   char str[64] = "DfscData";
 
-  ultoa(stream, str + strlen(str), 10);
+  _ultoa(stream, str + strlen(str), 10);
   ZeroMemory(adec, sizeof(DfscAdec));
 
-  adec->varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
+  adec->varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
   if (GetLastError() != ERROR_ALREADY_EXISTS) {
     CloseHandle(adec->varFile);
     adec->varFile = NULL;
   }
   if (!adec->varFile) {
-    adec->varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
+    adec->varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
     if (GetLastError() != ERROR_ALREADY_EXISTS) {
       CloseHandle(adec->varFile);
       adec->varFile = NULL;
@@ -149,9 +150,9 @@ int CreateAdec(DfscAdec* adec, DWORD stream) {
   if (adec->varFile) {
     adec->vars = (DfscData*)MapViewOfFile(adec->varFile, FILE_MAP_WRITE, 0, 0, 0);
     if (adec->vars) {
-      adec->audioEncSem = CreateSemaphore(NULL, 1, 1, adec->vars->audioEncSemName);
-      adec->audioEncEvent = CreateEvent(NULL, FALSE, FALSE, adec->vars->audioEncEventName);
-      adec->audioDecEvent = CreateEvent(NULL, FALSE, FALSE, adec->vars->audioDecEventName);
+      adec->audioEncSem = CreateSemaphoreA(NULL, 1, 1, adec->vars->audioEncSemName);
+      adec->audioEncEvent = CreateEventA(NULL, FALSE, FALSE, adec->vars->audioEncEventName);
+      adec->audioDecEvent = CreateEventA(NULL, FALSE, FALSE, adec->vars->audioDecEventName);
     }
   }
   if (!adec->vars) {
@@ -1978,7 +1979,7 @@ LRESULT FNLOCAL acmdStreamClose(LPACMDRVSTREAMINSTANCE padsi) {
   // in the case of this driver, we need to free the stream instance
   // structure that we allocated during acmdStreamOpen.
   //
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
   if (NULL != psi) {
     //
     // free the stream instance structure
@@ -2046,7 +2047,7 @@ LRESULT FNLOCAL acmdStreamSize(LPACMDRVSTREAMINSTANCE padsi,
   pwfxSrc = padsi->pwfxSrc;
   pwfxDst = padsi->pwfxDst;
 
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
 
   //
   //
@@ -2210,7 +2211,7 @@ LRESULT FNLOCAL acmdStreamConvert(PDRIVERINSTANCE pdi,
   fBlockAlign = (0 != (ACM_STREAMCONVERTF_BLOCKALIGN & padsh->fdwConvert));
   fStart = (0 != (ACM_STREAMCONVERTF_START & padsh->fdwConvert));
 
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
 
   if (WAVE_FORMAT_PCM == padsi->pwfxSrc->wFormatTag) {
     //
