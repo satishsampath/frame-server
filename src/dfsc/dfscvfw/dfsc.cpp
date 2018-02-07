@@ -90,7 +90,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD, LPVOID) {
 //	HWND is officially safe to pass (https://msdn.microsoft.com/en-us/library/aa384203.aspx).
 //	Not sure about the other things, but nobody seems to care and it actually works...
 //
-LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
+LRESULT PASCAL DriverProc(DWORD_PTR dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
   DfscInstance* pi = (DfscInstance*)((DWORD_PTR))dwDriverID;
 
   switch (uiMessage) {
