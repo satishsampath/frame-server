@@ -111,14 +111,14 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,176,141,50,14
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,134,235,1
     LTEXT           "Web :",IDC_STATIC,7,123,20,8
-    LTEXT           "http://www.debugmode.com/",IDC_WEBPAGE,32,123,96,8
+    LTEXT           "https://www.debugmode.com/",IDC_WEBPAGE,32,123,96,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,261,1
-    LTEXT           "© 2000-2012 Satish Kumar. S and contributors\r\nContributors: Victor Tchistiak",
+    LTEXT           "© 2000-2019 Satish Kumar. S and contributors\r\nContributors: Victor Tchistiak, N. Ildar",
                     IDC_STATIC,7,29,184,20
     EDITTEXT        IDC_WARNING,16,53,210,68,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "2.14",IDC_VERSION,206,29,15,8
+    LTEXT           "3.0",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -164,7 +164,7 @@ BEGIN
                     WS_EX_TRANSPARENT
     CTEXT           "A new version of FrameServer is available.",
                     IDC_UPDATE_LABEL,0,189,233,9
-    CTEXT           "http://www.debugmode.com/frameserver",IDC_UPDATE_URL,0,
+    CTEXT           "https://www.debugmode.com/frameserver/",IDC_UPDATE_URL,0,
                     198,233,11
 END
 

@@ -1,16 +1,19 @@
 Import('env')
-env = env.Clone()
+Import('env32')
 
-env['CPPDEFINES'] += ['_USRDLL', 'DFSCACM_EXPORTS']
+def doBuild(env, target):
+  env['CPPDEFINES'] += ['_USRDLL', 'DFSCACM_EXPORTS']
+  env['PDB'] = target + '.pdb'
+  bin = env.SharedLibrary(
+    target,
+    [
+      env.Object(target + '_codec', 'codec.c'),
+      target + '.def',
+      env.RES(target + '_codec.res', 'codec.rc')
+    ]
+  )
+  env.Install('#/src/dist/bin', bin[0])
 
-target = 'dfscacm'
-env['PDB'] = target + '.pdb'
-bin = env.SharedLibrary(
-  target,
-  [
-    'codec.c',
-    'dfscacm.def',
-    env.RES('codec.rc')
-  ]
-)
-env.Install('#/src/dist/bin', bin[0])
+doBuild(env.Clone(), 'dfscacm')
+if env['TARGET_ARCH'] == 'x86_64':
+  doBuild(env32.Clone(), 'dfscacm32')

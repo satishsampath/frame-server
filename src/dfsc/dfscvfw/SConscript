@@ -1,15 +1,19 @@
 Import('env')
-env = env.Clone()
+Import('env32')
 
-env['CPPDEFINES'] += ['_USRDLL']
+def doBuild(env, target, addlObjects):
+  env['CPPDEFINES'] += ['_USRDLL']
+  env['PDB'] = target + '.pdb'
+  bin = env.SharedLibrary(
+    target,
+    addlObjects + [
+      env.Object(target, 'dfsc.cpp'),
+      env.Object(target + '_utils', '../../utils/utils.cpp'),
+      target + '.def'
+    ]
+  )
+  env.Install('#/src/dist/bin', bin[0])
 
-target = 'dfsc'
-env['PDB'] = target + '.pdb'
-bin = env.SharedLibrary(
-  target,
-  [
-    'dfsc.cpp',
-    'dfsc.def',
-  ]
-)
-env.Install('#/src/dist/bin', bin[0])
+doBuild(env.Clone(), 'dfsc', [ env.Object('fast_memcpy', '../../utils/fast_memcpy.asm') ])
+if env['TARGET_ARCH'] == 'x86_64':
+  doBuild(env32.Clone(), 'dfsc32', [])

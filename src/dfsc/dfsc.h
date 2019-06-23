@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@ typedef struct {
        audioEncSemName[64],
        audioEncEventName[64],
        audioDecEventName[64];
-  char signpostPath[MAX_PATH * 2];
+  TCHAR signpostPath[MAX_PATH * 2];
   int encStatus, decStatus;
   DWORD videoFrameIndex, videoBytesRead;
   DWORD audioFrameIndex, audioBytesRead;

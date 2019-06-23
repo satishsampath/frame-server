@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,8 +29,6 @@
 #include "blankavi.h"
 #include "utils.h"
 #include "ImageSequence.h"
-
-#pragma warning(disable:4996)
 
 #define APPNAME _T("Debugmode FrameServer")
 #ifndef BIF_NEWDIALOGSTYLE
@@ -67,12 +65,8 @@ bool LoadImageSequenceModule() {
     return true;
 
   TCHAR libpath[MAX_PATH];
-  _tcscpy(libpath, installDir);
-#if defined(WIN64)
-  _tcscat(libpath, _T("\\ImageSequence-x64.dll"));
-#else
-  _tcscat(libpath, _T("\\ImageSequence.dll"));
-#endif
+  _tcscpy_s(libpath, MAX_PATH, installDir);
+  _tcscat_s(libpath, MAX_PATH, _T("\\ImageSequence.dll"));
   imageSequenceModule = LoadLibrary(libpath);
   if (!imageSequenceModule) {
     MessageBox(NULL, _T("Unable to load \"ImageSequence.dll\".\n\n")
@@ -89,15 +83,7 @@ DWORD WINAPI ImageSequenceExportThreadProc(LPVOID param) {
     return 0;
 
   fxnSaveImageSequence Save = (fxnSaveImageSequence)GetProcAddress(imageSequenceModule, "SaveImageSequence");
-  char* pathParam = NULL;
-#ifdef _UNICODE
-  char filepath[MAX_PATH * 2];
-  WideCharToMultiByte(CP_ACP, 0, imageSequencePath, -1, filepath, sizeof(filepath), NULL, NULL);
-  pathParam = filepath;
-#else
-  pathParam = imageSequencePath;
-#endif
-  Save((DfscData*)param, pathParam, imageSequenceFormat);
+  Save((DfscData*)param, imageSequencePath, imageSequenceFormat);
 
   return 0;
 }
@@ -161,7 +147,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       RegCloseKey(key);
     }
     if (_tcslen(imageSequencePath) == 0)
-      _tcscpy(imageSequencePath, _T("C:\\FrameServer Images\\Image######.png"));
+      _tcscpy_s(imageSequencePath, _countof(imageSequencePath), _T("C:\\FrameServer Images\\Image######.png"));
 
     CheckDlgButton(dlg, IDC_PCMAUDIOINAVI, pcmAudioInAvi);
     CheckRadioButton(dlg, IDC_SERVEASRGB24, IDC_SERVEASYUY2, IDC_SERVEASRGB24 + serveFormat);
@@ -190,7 +176,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath, sizeof(filepath));
       filename[0] = 0;
       if (_tcsrchr(filepath, '\\') != NULL) {
-        _tcscpy(filename, _tcsrchr(filepath, '\\') + 1);
+        _tcscpy_s(filename, _countof(filename), _tcsrchr(filepath, '\\') + 1);
         *_tcsrchr(filepath, '\\') = 0;
       }
 
@@ -206,7 +192,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         _tcsrchr(filepath, '\\')[0] = 0;          // remove the last dir from the string
       }
       if (_tcschr(filepath, '\\') == NULL)
-        _tcscat(filepath, _T("\\"));
+        _tcscat_s(filepath, _countof(filepath), _T("\\"));
 
       CoInitialize(0);
 
@@ -221,8 +207,8 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       if (item) {
         SHGetPathFromIDList(item, filepath);
         if (_tcslen(filename)) {
-          _tcscat(filepath, _T("\\"));
-          _tcscat(filepath, filename);
+          _tcscat_s(filepath, _countof(filepath), _T("\\"));
+          _tcscat_s(filepath, _countof(filepath), filename);
         }
         SetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath);
       }
@@ -237,10 +223,10 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         _tcsrchr(filepath, '.')[0] = 0;
 
       LRESULT sel = SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
-      if (sel == 0) _tcscat(filepath, _T(".jpg"));
-      if (sel == 1) _tcscat(filepath, _T(".png"));
-      if (sel == 2) _tcscat(filepath, _T(".tif"));
-      if (sel == 3) _tcscat(filepath, _T(".bmp"));
+      if (sel == 0) _tcscat_s(filepath, _countof(filepath), _T(".jpg"));
+      if (sel == 1) _tcscat_s(filepath, _countof(filepath), _T(".png"));
+      if (sel == 2) _tcscat_s(filepath, _countof(filepath), _T(".tif"));
+      if (sel == 3) _tcscat_s(filepath, _countof(filepath), _T(".bmp"));
       SetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath);
     }
 
@@ -259,8 +245,8 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     if (LOWORD(wp) == IDOK) {
       if (saveAsImageSequence) {
         // Check if the path and filenames are good enough
-        char dstpath[MAX_PATH * 2];
-        GetDlgItemTextA(dlg, IDC_IMAGESEQUENCEPATH, dstpath, sizeof(dstpath));
+        TCHAR dstpath[MAX_PATH * 2];
+        GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, dstpath, sizeof(dstpath));
         if (!LoadImageSequenceModule())
           break;
         fxnCheckAndPreparePath CheckAndPreparePath = (fxnCheckAndPreparePath)
@@ -344,8 +330,9 @@ DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     HWND wnd = (HWND)lp;
     int id = GetDlgCtrlID(wnd);
     if (id == IDC_UPDATE_URL || id == IDC_UPDATE_LABEL) {
-      SetBkColor(hdc, GetSysColor(COLOR_INFOBK));
-      return (BOOL)GetSysColorBrush(COLOR_INFOBK);
+      SetTextColor(hdc, RGB(255, 255, 255));
+      SetBkColor(hdc, RGB(255, 0, 0));
+      return (BOOL)CreateSolidBrush(RGB(255, 0, 0));
     }
   }
   break;
@@ -372,6 +359,11 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
   if (serveFormat == sfYUY2) {
     if (inDataFormat == idfAYUV) {
       // AYUV -> YUY2
+#if defined(_M_X64)
+      BYTE* src = (LPBYTE)pFrame;
+      BYTE* dst = ((LPBYTE)vars) + vars->videooffset;
+      mmx_VUYx_to_YUY2(src, dst, vars->encBi.biHeight, vars->encBi.biWidth, rowBytes);
+#else
       for (int i = 0; i < vars->encBi.biHeight; i++) {
         BYTE* src;
         src = (LPBYTE)pFrame + rowBytes * (vars->encBi.biHeight - 1 - i);
@@ -393,6 +385,7 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
           src += 32;
         }
       }
+#endif
       vars->videoBytesRead = vars->encBi.biWidth * vars->encBi.biHeight * 2;
     } else if (inDataFormat == idfRGB32) {
       if (MMX_enabled) {
@@ -431,6 +424,10 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
       BYTE* rgbData = ((LPBYTE)vars) + vars->videooffset;
       int srcRowBytes = rowBytes,
           dstRowBytes = (vars->encBi.biWidth * 3 + 3) & (~3);
+#if defined(_M_X64)
+      mmx_BGRx_to_RGB24(rgbaData, rgbData, vars->encBi.biHeight, vars->encBi.biWidth, srcRowBytes);
+      vars->videoBytesRead = dstRowBytes * vars->encBi.biHeight;
+#else
       for (int i = 0; i < vars->encBi.biHeight; i++, rgbData += dstRowBytes, rgbaData += srcRowBytes) {
         int j;
         for (j = 0; j < (vars->encBi.biWidth & 3); j++) {
@@ -449,6 +446,7 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
         }
       }
       vars->videoBytesRead = dstRowBytes * vars->encBi.biHeight;
+#endif
     }
   } else if (serveFormat == sfRGB32) {
     if (inDataFormat == idfRGB32) {
@@ -457,8 +455,12 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
       BYTE* dst = ((LPBYTE)vars) + vars->videooffset;
       int srcRowBytes = rowBytes,
           dstRowBytes = (vars->encBi.biWidth * 4 + 3) & (~3);
+#if defined(_M_X64)
+      mmx_CopyVideoFrame(src, dst, vars->encBi.biHeight, dstRowBytes, srcRowBytes);
+#else
       for (int i = 0; i < vars->encBi.biHeight; i++, dst += dstRowBytes, src += srcRowBytes)
         memcpy(dst, src, dstRowBytes);
+#endif
     }
   }
 }
@@ -475,7 +477,7 @@ void FrameServerImpl::Init(bool _hasAudio, DWORD _audioSamplingRate, DWORD _audi
   width = _width;
   height = _height;
   parentWnd = _parentWnd;
-  _tcscpy(filename, _filename);
+  _tcscpy_s(filename, _countof(filename), _filename);
 
   LoadCommonResource();
 }
@@ -491,8 +493,8 @@ bool LoadCommonResource() {
     installDir[size] = 0;
   }
   TCHAR libpath[MAX_PATH];
-  _tcscpy(libpath, installDir);
-  _tcscat(libpath, _T("\\fscommon.dll"));
+  _tcscpy_s(libpath, _countof(libpath), installDir);
+  _tcscat_s(libpath, _countof(libpath), _T("\\fscommon.dll"));
   ghResInst = LoadLibrary(libpath);
   if (!ghResInst) {
     MessageBox(NULL, _T("Unable to load \"fscommon.dll\". Please reinstall."), APPNAME, MB_OK | MB_ICONEXCLAMATION);
@@ -551,7 +553,7 @@ bool FrameServerImpl::Run() {
     DWORD stream = 0;
     for (stream = 0; ; stream++) {
       char str[64] = "DfscData";
-      ultoa(stream, str + strlen(str), 10);
+      _ultoa_s(stream, str + strlen(str), _countof(str) - strlen(str), 10);
       varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
           sizeof(DfscData) + videosize + audiosize, str);
       if (varFile) {
@@ -571,20 +573,15 @@ bool FrameServerImpl::Run() {
     vars->audiooffset = vars->videooffset + videosize;
     vars->totalAVDataSize = videosize + audiosize;
 
-    strcpy(vars->videoEncEventName, "DfscVideoEncEventName");
-    strcpy(vars->videoDecEventName, "DfscVideoDecEventName");
-    strcpy(vars->audioEncEventName, "DfscAudioEncEventName");
-    strcpy(vars->audioDecEventName, "DfscAudioDecEventName");
+#define DefineNameAndCreateEvent(evt, evtManualReset, nameStr, prefix) \
+    strcpy_s(nameStr, _countof(nameStr), prefix); \
+    _ultoa_s(stream, nameStr + strlen(nameStr), _countof(nameStr) - strlen(nameStr), 10); \
+    evt = CreateEventA(NULL, evtManualReset, FALSE, nameStr);
 
-    ultoa(stream, vars->videoEncEventName + strlen(vars->videoEncEventName), 10);
-    ultoa(stream, vars->videoDecEventName + strlen(vars->videoDecEventName), 10);
-    ultoa(stream, vars->audioEncEventName + strlen(vars->audioEncEventName), 10);
-    ultoa(stream, vars->audioDecEventName + strlen(vars->audioDecEventName), 10);
-
-    videoEncEvent = CreateEventA(NULL, TRUE, FALSE, vars->videoEncEventName);
-    videoDecEvent = CreateEventA(NULL, FALSE, FALSE, vars->videoDecEventName);
-    audioEncEvent = CreateEventA(NULL, TRUE, FALSE, vars->audioEncEventName);
-    audioDecEvent = CreateEventA(NULL, FALSE, FALSE, vars->audioDecEventName);
+    DefineNameAndCreateEvent(videoEncEvent, TRUE, vars->videoEncEventName, "DfscVideoEncEventName");
+    DefineNameAndCreateEvent(videoDecEvent, FALSE, vars->videoDecEventName, "DfscVideoDecEventName");
+    DefineNameAndCreateEvent(audioEncEvent, TRUE, vars->audioEncEventName, "DfscAudioEncEventName");
+    DefineNameAndCreateEvent(audioDecEvent, FALSE, vars->audioDecEventName, "DfscAudioDecEventName");
 
     vars->encStatus = 0;
     // --------------------- init vars done ---------------
@@ -647,11 +644,7 @@ bool FrameServerImpl::Run() {
     memset(vars + 1, 0, (vars->encBi.biWidth * vars->encBi.biHeight * vars->encBi.biBitCount) >> 3);
     vars->videoFrameIndex = -1;
     vars->audioFrameIndex = -1;
-#ifdef _UNICODE
-    WideCharToMultiByte(CP_ACP, 0, filename, -1, vars->signpostPath, sizeof(vars->signpostPath), NULL, NULL);
-#else
-    strcpy(vars->signpostPath, filename);
-#endif
+    _tcscpy_s(vars->signpostPath, _countof(vars->signpostPath), filename);
 
     LPVOID pFrame = 0;
     DWORD framesread = 0, samplesread = 0;
@@ -659,8 +652,8 @@ bool FrameServerImpl::Run() {
 
     if (networkServing) {
       TCHAR netServer[MAX_PATH * 2];
-      _tcscpy(netServer, installDir);
-      _tcscat(netServer, _T("\\DFsNetServer.exe"));
+      _tcscpy_s(netServer, _countof(netServer), installDir);
+      _tcscat_s(netServer, _countof(netServer), _T("\\DFsNetServer.exe"));
       STARTUPINFO stinfo;
       PROCESS_INFORMATION pinfo;
       memset(&stinfo, 0, sizeof(stinfo));
@@ -683,13 +676,13 @@ bool FrameServerImpl::Run() {
       DWORD curtime = timeGetTime();
       DWORD msec = curtime - lasttime;
       if (msec >= 1000) {
-        _stprintf(str, _T("(%d client%c connected over the network)"), vars->numNetworkClientsConnected,
+        _stprintf_s(str, _countof(str), _T("(%d client%c connected over the network)"), vars->numNetworkClientsConnected,
             (vars->numNetworkClientsConnected == 1) ? 's' : ' ');
         SetDlgItemText(servingdlg, IDC_NETCLIENTSTATS, str);
-        _stprintf(str, _T("%d%% realtime (%.2lf frames/sec)"),
+        _stprintf_s(str, _countof(str), _T("%d%% realtime (%.2lf frames/sec)"),
             (int)((framesread * 100) / fps), ((double)framesread * 1000) / msec);
         SetDlgItemText(servingdlg, IDC_VIDEOSTATS, str);
-        _stprintf(str, _T("%d%% realtime (%.2lf samples/sec)"),
+        _stprintf_s(str, _countof(str), _T("%d%% realtime (%.2lf samples/sec)"),
             (int)((samplesread * 100) / (audioSamplingRate ? audioSamplingRate : 1)),
             ((double)samplesread * 1000) / msec);
         SetDlgItemText(servingdlg, IDC_AUDIOSTATS, str);
@@ -724,12 +717,13 @@ bool FrameServerImpl::Run() {
       }
       if (WaitForSingleObject(videoEncEvent, 0) == WAIT_OBJECT_0) {
         ResetEvent(videoEncEvent);
-
-        char str[32]; strcpy(str, "video - ");
-        itoa(vars->videoFrameIndex, str + strlen(str), 10);
-        strcat(str, "\n");
+#ifdef DEBUG
+        char str[32];
+        strcpy_s(str, _countof(str), "video - ");
+        _itoa_s(vars->videoFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
+        strcat_s(str, _countof(str), "\n");
         OutputDebugStringA(str);
-
+#endif
         if (vars->videoFrameIndex < nfvideo)
           OnVideoRequest();
         else
@@ -740,12 +734,13 @@ bool FrameServerImpl::Run() {
       }
       if ((!pcmAudioInAvi) && (WaitForSingleObject(audioEncEvent, 0) == WAIT_OBJECT_0)) {
         ResetEvent(audioEncEvent);
-
-        char str[32]; strcpy(str, "audio - ");
-        itoa(vars->audioFrameIndex, str + strlen(str), 10);
-        strcat(str, "\n");
+#ifdef DEBUG
+        char str[32];
+        strcpy_s(str, _countof(str), "audio - ");
+        _itoa_s(vars->audioFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
+        strcat_s(str, _countof(str), "\n");
         OutputDebugStringA(str);
-
+#endif
         vars->audioBytesRead = 0;
         if (vars->audioRequestFullSecond) {
           LPBYTE data = (LPBYTE)vars + vars->audiooffset;
@@ -783,7 +778,7 @@ bool FrameServerImpl::Run() {
   __except(exrec = *((EXCEPTION_POINTERS*)_exception_info())->ExceptionRecord, 1) {
     TCHAR str[128];
 
-    _stprintf(str, _T("Exception %X at %X, %X"), exrec.ExceptionCode, exrec.ExceptionAddress, ghInst);
+    _stprintf_s(str, _countof(str), _T("Exception %X at %p, %p"), exrec.ExceptionCode, exrec.ExceptionAddress, ghInst);
     MessageBox(NULL, str, APPNAME, MB_OK);
     exit(0);
   }
@@ -797,7 +792,8 @@ bool FrameServerImpl::Run() {
     CloseHandle(hfile);
     TCHAR str[512];
     if (DeleteFile(filename)) break;
-    _stprintf(str, _T("Unable to delete the output file \"%s\"\n\n")
+    _stprintf_s(str, _countof(str),
+        _T("Unable to delete the output file \"%s\"\n\n")
         _T("This signpost AVI file cannot be used after closing the FrameServer. Please close any applications ")
         _T("that use the signpost AVI and select \"Retry\" to delete it (or \"Cancel\" to ignore)"),
         filename);

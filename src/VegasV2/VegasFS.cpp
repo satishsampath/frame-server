@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -209,7 +209,7 @@ STDMETHODIMP VegasFS::GetStrings(const SFFIO_FILECLASS_INFO_TEXT* paStringIds,
     // Localized Type Name (long version)
     { SFFIO_FILECLASS_TEXT_FileTypeNameLocalized, L"DebugMode FrameServer"},
     { SFFIO_FILECLASS_TEXT_DialogTitleLocalized, L"DebugMode FrameServer"},
-    { SFFIO_FILECLASS_TEXT_CopyrightLocalized, L"Copyright (C) 2009 Satish Kumar. S. All Rights Reserved." },
+    { SFFIO_FILECLASS_TEXT_CopyrightLocalized, L"Copyright (C) 2000-2019 Satish Kumar. S. All Rights Reserved." },
     { SFFIO_FILECLASS_TEXT_SupportURL, L"http://www.debugmode.com/frameserver/" },
     { SFFIO_FILECLASS_TEXT_SupportURLExplanationLocalized, L"Homepage"}
   };

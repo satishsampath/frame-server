@@ -1,17 +1,15 @@
-Import('env_vc9')
-Import('env_vc9_x64')
+Import('env')
 
-# ------ Premiere Pro CS4 and below (32 bit build) ----
-env_cs4 = env_vc9.Clone()
+env = env.Clone()
 
-env_cs4['CPPDEFINES'] += ['_USRDLL', 'PRWIN_ENV', 'MSWindows', 'UNICODE', '_UNICODE']
-env_cs4['RCFLAGS'] += ['/d', 'PRWIN_ENV']
-env_cs4['CPPPATH'] = ['../sdks/Premiere/cs4', '..', '../fscommon', '../dfsc', '../utils']
-env_cs4['LIBS'].remove('common.lib')
-env_cs4['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode.lib']
+env['CPPDEFINES'] += ['_USRDLL']
+env['RCFLAGS'] += ['/d', 'PRWIN_ENV']
+env['CPPPATH'] = ['../sdks/Premiere/cs5/examples/headers', '..', '../fscommon', '../dfsc', '../utils']
+env['LIBS'].remove('common.lib')
+env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common.lib']
 
-env_cs4['PDB'] = 'dfscPremiereOut.pdb'
-bin = env_cs4.SharedLibrary(
+env['PDB'] = 'dfscPremiereOut.pdb'
+bin = env.SharedLibrary(
   'dfscPremiereOut',
   [
     'PremiereFS.cpp',
@@ -21,32 +19,7 @@ bin = env_cs4.SharedLibrary(
 
 # Add a post-build step to embed the manifest using mt.exe
 # The number at the end of the line indicates the file type (1: EXE; 2:DLL).
-if not env_cs4['dbg']:
-  env_cs4.AddPostAction(bin,
+if not env['dbg']:
+  env.AddPostAction(bin,
     'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
-env_cs4.Install('#/src/dist/bin', bin[0])
-
-# ------ Premiere Pro CS5 and above (64 bit build) ----
-env_cs5 = env_vc9_x64.Clone()
-
-env_cs5['CPPDEFINES'] += ['_USRDLL']
-env_cs5['RCFLAGS'] += ['/d', 'PRWIN_ENV']
-env_cs5['CPPPATH'] = ['../sdks/Premiere/cs5/examples/headers', '..', '../fscommon', '../dfsc', '../utils']
-env_cs5['LIBS'].remove('common.lib')
-env_cs5['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common_unicode_x64.lib']
-
-env_cs5['PDB'] = 'dfscPremiereOutCS5.pdb'
-bin = env_cs5.SharedLibrary(
-  'dfscPremiereOutCS5',
-  [
-    env_cs5.Object('PremiereFS_CS5', 'PremiereFS.cpp'),
-  ],
-  SHLIBSUFFIX = '.prm'
-)
-
-# Add a post-build step to embed the manifest using mt.exe
-# The number at the end of the line indicates the file type (1: EXE; 2:DLL).
-if not env_cs5['dbg']:
-  env_cs5.AddPostAction(bin,
-    'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
-env_cs5.Install('#/src/dist/bin', bin[0])
+env.Install('#/src/dist/bin', bin[0])

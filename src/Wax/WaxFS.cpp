@@ -105,7 +105,7 @@ int WaxFSExport(DmFxnHostRenderGetVideo renderGetVideo,
     AudioFilterParams* psAudio,
     VideoFilterParams* psVideo) {
   if (!psVideo) {
-    MessageBox(NULL, "Frameserver cannot work with just audio, please include video in the render",
+    MessageBoxA(NULL, "Frameserver cannot work with just audio, please include video in the render",
         APPNAME, MB_OK);
     return 1;
   }
@@ -119,9 +119,11 @@ int WaxFSExport(DmFxnHostRenderGetVideo renderGetVideo,
   fs.imageBuffer = (psVideo) ? new ImageSample[psVideo->dwWidth * psVideo->dwHeight] : NULL;
   fs.audioBuffer = (psAudio) ? new AudioSample[psAudio->dwSamplingRate + 100] : NULL;
 
+  TCHAR tcFileName[_MAX_PATH];
+  MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pcFileName, -1, tcFileName, _MAX_PATH);
   fs.Init((psAudio != NULL), (psAudio ? psAudio->dwSamplingRate : 0), 16, 2, (psVideo ? psVideo->dwNumFrames : 0),
       (psVideo ? psVideo->dwFrameRate / 100.0 : 1), (psVideo ? psVideo->dwWidth : 0),
-      (psVideo ? psVideo->dwHeight : 0), filterTools->hMainWnd, pcFileName);
+      (psVideo ? psVideo->dwHeight : 0), filterTools->hMainWnd, tcFileName);
   fs.Run();
 
   delete[] fs.imageBuffer;

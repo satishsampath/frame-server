@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,14 +29,14 @@
 // latest VC 64-bit builds.
 #if defined(_WIN64)
   #define DLGPROCRET INT_PTR
-#else  // defined(__WIN64)
+#else  // defined(_WIN64)
   #define DLGPROCRET BOOL
   #if !defined(GWLP_WNDPROC)
     #define GWLP_WNDPROC GWL_WNDPROC
     #define GetWindowLongPtr GetWindowLong
     #define SetWindowLongPtr SetWindowLong
   #endif  // !defined(GWLP_WNDPROC)
-#endif  // defined(__WIN64)
+#endif  // defined(_WIN64)
 
 enum {
   sfRGB24 = 0,

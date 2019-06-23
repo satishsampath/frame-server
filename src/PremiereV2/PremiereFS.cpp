@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,25 +37,12 @@
 HINSTANCE ghInst;
 
 #define APPNAME L"DebugMode FrameServer"
-#if !defined(WIN64)
-  // This is defined in the CS5 sdk, so we define the same for CS4 to keep the code simple.
-  typedef long csSDK_int32;
-  typedef long csSDK_uint32;
-#endif
 
 // Define a placement new operator to use c++ objects with premiere's NewPtr allocator.
 void* operator new(size_t cbSize, void* pv) {
   return pv;
 }
 void operator delete(void*, void*) {  // dummy method to turn off warnings.
-}
-
-void debug(wchar_t* prefix, int value) {
-  wchar_t msg[512];
-
-  lstrcpy(msg, prefix);
-  _itow_s(value, msg + lstrlen(prefix), 10, 10);
-  OutputDebugString(msg);
 }
 
 class PremiereFSImpl : public FrameServerImpl {
@@ -171,7 +158,7 @@ prMALError PremiereFSImpl::postProcessParams(exPostProcessParamsRec* rec) {
   exportParam->SetParamName(pluginId, 0, ADBEAudioRatePerSecond, L"Sample Rate");
   exportParam->ClearConstrainedValues(pluginId, 0, ADBEAudioRatePerSecond);
   float sampleRates[] = { 16000.0f, 32000.0f, 44100.0f, 48000.0f };
-  wchar_t* sampleRateStrings[] = { L"16000 Hz", L"32000 Hz", L"44100 Hz", L"48000 Hz" };
+  const wchar_t* sampleRateStrings[] = { L"16000 Hz", L"32000 Hz", L"44100 Hz", L"48000 Hz" };
   for (int i = 0; i < sizeof(sampleRates) / sizeof(float); i++) {
     exOneParamValueRec value;
     value.floatValue = sampleRates[i];
@@ -435,11 +422,7 @@ prMALError doBeginInstance(exportStdParms* stdParams, exExporterInstanceRec* rec
   // Initialize the object per c++
   fs = new (fs)PremiereFSImpl(basicSuite);
 
-#if defined(WIN64)
   rec->privateData = reinterpret_cast<void*>(fs);  // CS5 and above
-#else
-  rec->privateData = reinterpret_cast<long>(fs);  // CS4 and below
-#endif
 
   return malNoError;
 }
@@ -467,10 +450,8 @@ prMALError doEndInstance(exportStdParms* stdParams, exExporterInstanceRec* rec) 
   return malNoError;
 }
 
-extern "C" DllExport PREMPLUGENTRY xSDKExport(int selector, exportStdParms* stdParams, long param1, long param2) {
+extern "C" DllExport PREMPLUGENTRY xSDKExport(csSDK_int32 selector, exportStdParms* stdParams, void* param1, void* param2) {
   prMALError result = exportReturn_Unsupported;
-
-  debug(L"sel=", selector);
 
   switch (selector) {
   case exSelStartup:

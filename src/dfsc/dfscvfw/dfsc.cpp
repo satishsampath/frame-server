@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
  */
 
 #include "../dfsc.h"
+#include "../../utils/utils.h"
 #include <crtdbg.h>
 #include <STDIO.H>
 #include <TCHAR.H>
@@ -83,8 +84,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD, LPVOID) {
   return TRUE;
 }
 
-LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
-  DfscInstance* pi = (DfscInstance*)(UINT)dwDriverID;
+// NOTE x64 platform:
+//	64-bit pointers are being passed via the 32-bit lParam parameters.
+//	This effectively zeroes the highest 32 bits of a pointer.
+//	HWND is officially safe to pass (https://msdn.microsoft.com/en-us/library/aa384203.aspx).
+//	Not sure about the other things, but nobody seems to care and it actually works...
+//
+LRESULT PASCAL DriverProc(DWORD_PTR dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
+  DfscInstance* pi = (DfscInstance*)(DWORD_PTR)dwDriverID;
 
   switch (uiMessage) {
   case DRV_LOAD:
@@ -94,7 +101,7 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
     return (LRESULT)1L;
 
   case DRV_OPEN:
-    return (LRESULT)(DWORD)(UINT)Open((ICOPEN*)lParam2);
+    return (LRESULT)(DWORD_PTR)Open((ICOPEN*)lParam2);
 
   case DRV_CLOSE:
     if (pi) Close(pi);
@@ -108,7 +115,7 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
     return (LRESULT)1L;
 
   case DRV_CONFIGURE:
-    pi->Configure((HWND)lParam1);
+    pi->Configure((HWND)(DWORD_PTR)lParam1);
     return DRV_OK;
 
   case ICM_CONFIGURE:
@@ -118,7 +125,7 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
     if (lParam1 == -1)
       return pi->QueryConfigure() ? ICERR_OK : ICERR_UNSUPPORTED;
     else
-      return pi->Configure((HWND)lParam1);
+      return pi->Configure((HWND)(DWORD_PTR)lParam1);
 
   case ICM_ABOUT:
     //
@@ -127,20 +134,20 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
     if (lParam1 == -1)
       return pi->QueryAbout() ? ICERR_OK : ICERR_UNSUPPORTED;
     else
-      return pi->About((HWND)lParam1);
+      return pi->About((HWND)(DWORD_PTR)lParam1);
 
   case ICM_GETSTATE:
-    return pi->GetState((LPVOID)lParam1, (DWORD)lParam2);
+    return pi->GetState((LPVOID)(DWORD_PTR)lParam1, (DWORD)lParam2);
 
   case ICM_SETSTATE:
-    return pi->SetState((LPVOID)lParam1, (DWORD)lParam2);
+    return pi->SetState((LPVOID)(DWORD_PTR)lParam1, (DWORD)lParam2);
 
   case ICM_GETINFO:
-    return pi->GetInfo((ICINFO*)lParam1, (DWORD)lParam2);
+    return pi->GetInfo((ICINFO*)(DWORD_PTR)lParam1, (DWORD)lParam2);
 
   case ICM_GETDEFAULTQUALITY:
     if (lParam1) {
-      *((LPDWORD)lParam1) = 7500;
+      *((LPDWORD)(DWORD_PTR)lParam1) = 7500;
       return ICERR_OK;
     }
     break;
@@ -150,22 +157,22 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
   *********************************************************************/
 
   case ICM_COMPRESS_FRAMES_INFO:
-    return pi->CompressFramesInfo((ICCOMPRESSFRAMES*)lParam1);
+    return pi->CompressFramesInfo((ICCOMPRESSFRAMES*)(DWORD_PTR)lParam1);
 
   case ICM_COMPRESS_QUERY:
-    return pi->CompressQuery((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->CompressQuery((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_COMPRESS_BEGIN:
-    return pi->CompressBegin((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->CompressBegin((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_COMPRESS_GET_FORMAT:
-    return pi->CompressGetFormat((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->CompressGetFormat((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_COMPRESS_GET_SIZE:
-    return pi->CompressGetSize((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->CompressGetSize((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_COMPRESS:
-    return pi->Compress((ICCOMPRESS*)lParam1, (DWORD)lParam2);
+    return pi->Compress((ICCOMPRESS*)(DWORD_PTR)lParam1, (DWORD)lParam2);
 
   case ICM_COMPRESS_END:
     return pi->CompressEnd();
@@ -175,19 +182,19 @@ LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARA
   *********************************************************************/
 
   case ICM_DECOMPRESS_QUERY:
-    return pi->DecompressQuery((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->DecompressQuery((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_DECOMPRESS_BEGIN:
-    return pi->DecompressBegin((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->DecompressBegin((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_DECOMPRESS_GET_FORMAT:
-    return pi->DecompressGetFormat((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->DecompressGetFormat((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_DECOMPRESS_GET_PALETTE:
-    return pi->DecompressGetPalette((LPBITMAPINFOHEADER)lParam1, (LPBITMAPINFOHEADER)lParam2);
+    return pi->DecompressGetPalette((LPBITMAPINFOHEADER)(DWORD_PTR)lParam1, (LPBITMAPINFOHEADER)(DWORD_PTR)lParam2);
 
   case ICM_DECOMPRESS:
-    return pi->Decompress((ICDECOMPRESS*)lParam1, (DWORD)lParam2);
+    return pi->Decompress((ICDECOMPRESS*)(DWORD_PTR)lParam1, (DWORD)lParam2);
 
   case ICM_DECOMPRESS_END:
     return pi->DecompressEnd();
@@ -253,7 +260,7 @@ BOOL DfscInstance::QueryAbout() {
 
 DWORD DfscInstance::About(HWND hwnd) {
   MessageBox(NULL, _T(
-          "DebugMode FrameServer VFW Codec\nCopyright 2000-2004 Satish Kumar. S\n\nhttp://www.debugmode.com/"),
+          "DebugMode FrameServer VFW Codec\nCopyright 2000-2019 Satish Kumar. S\n\nhttp://www.debugmode.com/"),
       _T("About"), MB_OK);
   return ICERR_OK;
 }
@@ -291,8 +298,8 @@ DWORD DfscInstance::GetInfo(ICINFO* icinfo, DWORD dwSize) {
 
   icinfo->dwVersion = VERSION;
   icinfo->dwVersionICM = ICVERSION;
-  MultiByteToWideChar(CP_ACP, 0, szName, -1, icinfo->szName, sizeof(icinfo->szName) / sizeof(WCHAR));
-  MultiByteToWideChar(CP_ACP, 0, szDescription, -1, icinfo->szDescription, sizeof(icinfo->szDescription) / sizeof(WCHAR));
+  wcsncpy_s(icinfo->szName, _countof(icinfo->szName), szName, _TRUNCATE);
+  wcsncpy_s(icinfo->szDescription, _countof(icinfo->szDescription), szDescription, _TRUNCATE);
 
   return sizeof(ICINFO);
 }
@@ -364,14 +371,14 @@ DWORD DfscInstance::DecompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADE
         lpbiIn->biHeight != outHeight ||
         lpbiIn->biWidth != lpbiOut->biWidth ||
         lpbiIn->biPlanes != lpbiOut->biPlanes) {
-      sprintf(st, "0x%X - 0x%X\n", lpbiIn->biBitCount, lpbiOut->biBitCount);
-      OutputDebugString(st);
-      sprintf(st, "0x%X - 0x%X\n", lpbiIn->biHeight, lpbiOut->biHeight);
-      OutputDebugString(st);
-      sprintf(st, "0x%X - 0x%X\n", lpbiIn->biWidth, lpbiOut->biWidth);
-      OutputDebugString(st);
-      sprintf(st, "0x%X - 0x%X\n", lpbiIn->biPlanes, lpbiOut->biPlanes);
-      OutputDebugString(st);
+      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biBitCount, lpbiOut->biBitCount);
+      OutputDebugStringA(st);
+      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biHeight, lpbiOut->biHeight);
+      OutputDebugStringA(st);
+      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biWidth, lpbiOut->biWidth);
+      OutputDebugStringA(st);
+      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biPlanes, lpbiOut->biPlanes);
+      OutputDebugStringA(st);
       return ICERR_BADFORMAT;
     }
   }
@@ -434,7 +441,7 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
     }
 
     if (!vars) {
-      varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
+      varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
       if (GetLastError() != ERROR_ALREADY_EXISTS) {
         CloseHandle(varFile);
         varFile = NULL;
@@ -442,8 +449,8 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
       if (!varFile) {
         DWORD stream = ((DWORD*)icinfo->lpInput)[1];
         char str[64] = "DfscData";
-        ultoa(stream, str + strlen(str), 10);
-        varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
+        _ultoa_s(stream, str + strlen(str), _countof(str) - strlen(str), 10);
+        varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
         if (GetLastError() != ERROR_ALREADY_EXISTS) {
           CloseHandle(varFile);
           varFile = NULL;
@@ -456,9 +463,9 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
       if (!vars)
         return ICERR_BADFORMAT;
 
-      videoEncSem = CreateSemaphore(NULL, 1, 1, vars->videoEncSemName);
-      videoEncEvent = CreateEvent(NULL, FALSE, FALSE, vars->videoEncEventName);
-      videoDecEvent = CreateEvent(NULL, FALSE, FALSE, vars->videoDecEventName);
+      videoEncSem = CreateSemaphoreA(NULL, 1, 1, vars->videoEncSemName);
+      videoEncEvent = CreateEventA(NULL, FALSE, FALSE, vars->videoEncEventName);
+      videoDecEvent = CreateEventA(NULL, FALSE, FALSE, vars->videoDecEventName);
     }
 
     WaitForSingleObject(videoEncSem, 10000);
@@ -477,7 +484,7 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
       if (vars->encStatus == 1)         // encoder closed
         return ICERR_ABORT;
       // OutputDebugString("got video...");
-      memcpy(icinfo->lpOutput, ((LPBYTE)vars) + vars->videooffset, vars->videoBytesRead);
+      fast_memcpy(icinfo->lpOutput, ((LPBYTE)vars) + vars->videooffset, vars->videoBytesRead);
     }
     ReleaseSemaphore(videoEncSem, 1, NULL);
   }
@@ -485,7 +492,7 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
   __except(exrec = *((EXCEPTION_POINTERS*)_exception_info())->ExceptionRecord, 1) {
     TCHAR str[128];
 
-    _stprintf(str, _T("Exception %X at %X, %X"), exrec.ExceptionCode, exrec.ExceptionAddress, hmoduleDfsc);
+    _stprintf_s(str, _countof(str), _T("Exception %X at %p, %p"), exrec.ExceptionCode, exrec.ExceptionAddress, hmoduleDfsc);
     MessageBox(NULL, str, _T("DebugMode FrameServer"), MB_OK);
   }
 #endif

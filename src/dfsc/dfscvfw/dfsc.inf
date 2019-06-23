@@ -38,13 +38,13 @@ DFSC.DLL
 DFSC.INI
 
 [DFSC.Reg]
-HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Description,,"DebugMode FrameServer Codec [DFSC]"
-HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Driver,,"dfsc.dll"
-HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,FriendlyName,,"DebugMode FrameServer Codec [DFSC]"
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Description,0x00005000,"DebugMode FrameServer Codec [DFSC]"
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,Driver,0x00005000,"dfsc.dll"
+HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.DFSC,FriendlyName,0x00005000,"DebugMode FrameServer Codec [DFSC]"
 
 HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,DisplayName,,"DebugMode FrameServer Codec (Remove Only)"
-HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,UninstallString,,"rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\DFSC.INF"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,DisplayName,0x00005000,"DebugMode FrameServer Codec (Remove Only)"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\DFSC,UninstallString,0x00005000,"rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\DFSC.INF"
 
 [DFSC.INIs]
 system.ini, drivers32,, "VIDC.DFSC=dfsc.dll"

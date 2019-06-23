@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,5 +25,15 @@
 extern void CpuDetect();
 extern int FPU_enabled, MMX_enabled;
 extern void mmx_ConvertRGB32toYUY2(unsigned char *src,unsigned char *dst,int src_pitch, int dst_pitch,int w, int h);
+extern "C" void fast_memcpy(void *_dst, const void *_src, size_t _size);
+
+#if defined(_M_X64)
+extern "C"
+{
+  unsigned long mmx_BGRx_to_RGB24(const void *pSrc, void *pDst, long height, long width, long cbRow);
+  unsigned long mmx_VUYx_to_YUY2(const void *pSrc, void *pDst, long height, long width, long cbRow);
+  unsigned long mmx_CopyVideoFrame(const void *pSrc, void *pDst, long height, long dstRowBytes, long srcRowBytes);
+}
+#endif
 
 #endif // UTILS_UTILS_H

@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@
 #define APPNAME _T("DebugMode Network Frameserver")
 
 DWORD networkPort = 8278;
-char signpostPath[MAX_PATH];
+TCHAR signpostPath[MAX_PATH];
 
 HINSTANCE ghInst;
 DfscData* vars = NULL;
@@ -69,11 +69,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   ghInst = hInstance;
 
   HKEY key = 0;
-  RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\DebugMode\\FrameServer", 0, 0,
+  RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0,
       REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &key, 0);
   if (key) {
     DWORD size = sizeof(networkPort);
-    RegQueryValueEx(key, "networkPort", 0, 0, (LPBYTE)&networkPort, &size);
+    RegQueryValueEx(key, _T("networkPort"), 0, 0, (LPBYTE)&networkPort, &size);
     RegCloseKey(key);
   }
 
@@ -81,7 +81,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   WSADATA wsaData;
   wVersionRequested = MAKEWORD(1, 1);
   if (WSAStartup(wVersionRequested, &wsaData) != 0) {
-    MessageBox(NULL, "Unable to initialize network. Please check if you have latest network drivers.",
+    MessageBox(NULL, _T("Unable to initialize network. Please check if you have latest network drivers."),
         APPNAME, MB_OK);
     return -1;
   }
@@ -95,16 +95,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   if (sockConnect == INVALID_SOCKET ||
       bind(sockConnect, (struct sockaddr*)&addr, sizeof(addr)) != 0 ||
       listen(sockConnect, SOMAXCONN) != 0) {
-    MessageBox(NULL, "Unable to create network socket. Please check network connections and see if the "
-        "port you specified is used by some other program.",
+    MessageBox(NULL, _T("Unable to create network socket. Please check network connections and see if the "
+        "port you specified is used by some other program."),
         APPNAME, MB_OK | MB_ICONEXCLAMATION);
     return -1;
   }
 
   DWORD stream = 0;
   char str[64] = "DfscData";
-  ultoa(stream, str + strlen(str), 10);
-  varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
+  _ultoa_s(stream, str + strlen(str), 56, 10);
+  varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
   if (GetLastError() != ERROR_ALREADY_EXISTS) {
     CloseHandle(varFile);
     varFile = NULL;
@@ -114,13 +114,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
   vars = (DfscData*)MapViewOfFile(varFile, FILE_MAP_WRITE, 0, 0, 0);
   if (!vars)
     return -1;
-  strcpy(signpostPath, vars->signpostPath);
-  videoEncSem = CreateSemaphore(NULL, 1, 1, vars->videoEncSemName);
-  videoEncEvent = CreateEvent(NULL, FALSE, FALSE, vars->videoEncEventName);
-  videoDecEvent = CreateEvent(NULL, FALSE, FALSE, vars->videoDecEventName);
-  audioEncSem = CreateSemaphore(NULL, 1, 1, vars->audioEncSemName);
-  audioEncEvent = CreateEvent(NULL, FALSE, FALSE, vars->audioEncEventName);
-  audioDecEvent = CreateEvent(NULL, FALSE, FALSE, vars->audioDecEventName);
+  _tcscpy_s(signpostPath, _countof(signpostPath), vars->signpostPath);
+  videoEncSem = CreateSemaphoreA(NULL, 1, 1, vars->videoEncSemName);
+  videoEncEvent = CreateEventA(NULL, FALSE, FALSE, vars->videoEncEventName);
+  videoDecEvent = CreateEventA(NULL, FALSE, FALSE, vars->videoDecEventName);
+  audioEncSem = CreateSemaphoreA(NULL, 1, 1, vars->audioEncSemName);
+  audioEncEvent = CreateEventA(NULL, FALSE, FALSE, vars->audioEncEventName);
+  audioDecEvent = CreateEventA(NULL, FALSE, FALSE, vars->audioDecEventName);
 
   SOCKET sockClient[16];
   int numSockClient = 0;
@@ -140,8 +140,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
           DWORD size = vars->totalAVDataSize;
           send(sockClient[numSockClient], (const char*)&size, sizeof(size), 0);
           send(sockClient[numSockClient], (const char*)vars, sizeof(DfscData), 0);
-          FILE* fp = fopen(signpostPath, "rb");
-          // FILE *fp = NULL;
+          FILE* fp = _tfopen(signpostPath, _T("rb"));
           bool success = false;
           if (fp) {
             fseek(fp, 0, SEEK_END);
@@ -149,9 +148,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             fseek(fp, 0, SEEK_SET);
             send(sockClient[numSockClient], (const char*)&size, sizeof(size), 0);
             BYTE fileData[32768];
-            for (DWORD i = 0; i < size;) {
-              DWORD cursize = min(size - i, 32768);
-              DWORD bytesread = 0;
+            size_t i = 0;
+            while (i < size) {
+              size_t cursize = min(size - i, 32768);
+              size_t bytesread = 0;
               bytesread = fread(fileData, 1, cursize, fp);
               if (bytesread != cursize) break;
               send(sockClient[numSockClient], (char*)fileData, cursize, 0);
@@ -180,7 +180,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #ifdef _DEBUG
             char str[32];
             sprintf(str, "v1 %f - ", (float)timeGetTime() / 1000.0f);
-            OutputDebugString(str);
+            OutputDebugStringA(str);
 #endif
             closeconn = ((rval = SocketReadBlock(sockClient[s], (char*)&frameIndex, sizeof(frameIndex))) == 0);
             if (rval == SOCKET_ERROR) closeconn = true;
@@ -226,7 +226,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                 }
                 ReleaseSemaphore(videoEncSem, 1, NULL);
               }
-              OutputDebugString("sending\n");
+              OutputDebugStringA("sending\n");
               SendReadAudioFrameIndexAndLen(sockClient[s], readAudio, frameIndex, len);
               if (len)
                 send(sockClient[s], (const char*)ptr, len, 0);
@@ -236,11 +236,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             }
 #ifdef _DEBUG
             sprintf(str, "v2 %f\n", (float)timeGetTime() / 1000.0f);
-            OutputDebugString(str);
+            OutputDebugStringA(str);
 #endif
           }
           if (closeconn) {
-            OutputDebugString("Connection closed\n");
+            OutputDebugStringA("Connection closed\n");
             closesocket(sockClient[s]);
             memcpy(sockClient + s, sockClient + s + 1, sizeof(sockClient[0]) * (numSockClient - s - 1));
             numSockClient--;

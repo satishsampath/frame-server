@@ -1,11 +1,12 @@
 License agreement for DebugMode FrameServer
 -------------------------------------------------
 
-Copyright © 2000-2012 Satish Kumar. S and contributors
+Copyright © 2000-2019 Satish Sampath and contributors
 http://www.debugmode.com/
 
 Contributors:
 - Victor Tchistiak
+- N. Ildar
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

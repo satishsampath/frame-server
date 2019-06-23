@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,16 +30,13 @@
 //
 //==========================================================================;
 
-#define DWORD_PTR DWORD
 #include <windows.h>
 #include <windowsx.h>
 #include <mmsystem.h>
 #include <ctype.h>
 #include <mmreg.h>
 #include <msacm.h>
-#ifndef USE_DDK_MSACMDRV_H
-  #include "ddk/msacmdrv.h"
-#endif
+#include <msacmdrv.h>
 #include "resource.h"
 #include "codec.h"
 
@@ -131,16 +128,16 @@ void DestroyAdec(DfscAdec* adec) {
 int CreateAdec(DfscAdec* adec, DWORD stream) {
   char str[64] = "DfscData";
 
-  ultoa(stream, str + strlen(str), 10);
+  _ultoa_s(stream, str + strlen(str), 64, 10);
   ZeroMemory(adec, sizeof(DfscAdec));
 
-  adec->varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
+  adec->varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");
   if (GetLastError() != ERROR_ALREADY_EXISTS) {
     CloseHandle(adec->varFile);
     adec->varFile = NULL;
   }
   if (!adec->varFile) {
-    adec->varFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
+    adec->varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), str);
     if (GetLastError() != ERROR_ALREADY_EXISTS) {
       CloseHandle(adec->varFile);
       adec->varFile = NULL;
@@ -149,9 +146,9 @@ int CreateAdec(DfscAdec* adec, DWORD stream) {
   if (adec->varFile) {
     adec->vars = (DfscData*)MapViewOfFile(adec->varFile, FILE_MAP_WRITE, 0, 0, 0);
     if (adec->vars) {
-      adec->audioEncSem = CreateSemaphore(NULL, 1, 1, adec->vars->audioEncSemName);
-      adec->audioEncEvent = CreateEvent(NULL, FALSE, FALSE, adec->vars->audioEncEventName);
-      adec->audioDecEvent = CreateEvent(NULL, FALSE, FALSE, adec->vars->audioDecEventName);
+      adec->audioEncSem = CreateSemaphoreA(NULL, 1, 1, adec->vars->audioEncSemName);
+      adec->audioEncEvent = CreateEventA(NULL, FALSE, FALSE, adec->vars->audioEncEventName);
+      adec->audioDecEvent = CreateEventA(NULL, FALSE, FALSE, adec->vars->audioDecEventName);
     }
   }
   if (!adec->vars) {
@@ -942,7 +939,7 @@ LRESULT FNLOCAL acmdDriverDetails(PDRIVERINSTANCE pdi, LPACMDRIVERDETAILS padd) 
   // not needed. because of this we make a quick check to see if we
   // should go through the effort of filling in these members.
   //
-  if (FIELD_OFFSET(ACMDRIVERDETAILS, hicon) < cbStruct) {
+  if (FIELD_OFFSET(ACMDRIVERDETAILS, hicon) < (int)cbStruct) {
     //
     // fill in the hicon member will a handle to a custom icon for
     // the ACM driver. this allows the driver to be represented by
@@ -978,7 +975,7 @@ LRESULT FNLOCAL acmdDriverDetails(PDRIVERINSTANCE pdi, LPACMDRIVERDETAILS padd) 
     // of any sort in these strings (for example CR/LF's, etc). it
     // is up to the application to format the text.
     //
-    if (FIELD_OFFSET(ACMDRIVERDETAILS, szCopyright) < cbStruct) {
+    if (FIELD_OFFSET(ACMDRIVERDETAILS, szCopyright) < (int)cbStruct) {
       LoadStringCodec(pdi->hinst, IDS_ACM_DRIVER_COPYRIGHT, add.szCopyright, SIZEOFACMSTR(add.szCopyright));
       LoadStringCodec(pdi->hinst, IDS_ACM_DRIVER_LICENSING, add.szLicensing, SIZEOFACMSTR(add.szLicensing));
       LoadStringCodec(pdi->hinst, IDS_ACM_DRIVER_FEATURES, add.szFeatures, SIZEOFACMSTR(add.szFeatures));
@@ -1978,7 +1975,7 @@ LRESULT FNLOCAL acmdStreamClose(LPACMDRVSTREAMINSTANCE padsi) {
   // in the case of this driver, we need to free the stream instance
   // structure that we allocated during acmdStreamOpen.
   //
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
   if (NULL != psi) {
     //
     // free the stream instance structure
@@ -2046,7 +2043,7 @@ LRESULT FNLOCAL acmdStreamSize(LPACMDRVSTREAMINSTANCE padsi,
   pwfxSrc = padsi->pwfxSrc;
   pwfxDst = padsi->pwfxDst;
 
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
 
   //
   //
@@ -2210,7 +2207,7 @@ LRESULT FNLOCAL acmdStreamConvert(PDRIVERINSTANCE pdi,
   fBlockAlign = (0 != (ACM_STREAMCONVERTF_BLOCKALIGN & padsh->fdwConvert));
   fStart = (0 != (ACM_STREAMCONVERTF_START & padsh->fdwConvert));
 
-  psi = (PSTREAMINSTANCE)(UINT)padsi->dwDriver;
+  psi = (PSTREAMINSTANCE)(DWORD_PTR)padsi->dwDriver;
 
   if (WAVE_FORMAT_PCM == padsi->pwfxSrc->wFormatTag) {
     //
@@ -2270,9 +2267,9 @@ LRESULT FNLOCAL acmdStreamConvert(PDRIVERINSTANCE pdi,
         psi->adec.vars->audioFrameIndex = *(DWORD*)(padsh->pbSrc + frame);
 
         SetEvent(psi->adec.audioEncEvent);
-        OutputDebugString("waiting for audio...");
+        OutputDebugStringA("waiting for audio...");
         if (WaitForSingleObject(psi->adec.audioDecEvent, INFINITE) == WAIT_OBJECT_0) {
-          OutputDebugString("got audio");
+          OutputDebugStringA("got audio");
           memcpy(padsh->pbDst + dstoff, ((LPBYTE)psi->adec.vars) + psi->adec.vars->audiooffset, psi->adec.vars->audioBytesRead);
           padsh->cbSrcLengthUsed += 8;
           padsh->cbDstLengthUsed += psi->adec.vars->audioBytesRead;

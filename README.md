@@ -16,13 +16,11 @@ Frameserver's build uses the SCons build system (you can find the build configs 
 
 ## Requirements to build ##
 
-  1. MS Visual Studio 6.0, for most of the plug-ins
-  1. MS Visual Studio 2008 (can use express edition), for Vegas Pro and Premiere Pro plug-ins
-  1. A Visual Studio 6.0 compatible platform SDK. I use MS Windows Server 2003 [R2](https://code.google.com/p/frame-server/source/detail?r=2) Platform SDK (http://www.microsoft.com/downloads/details.aspx?FamilyID=484269e2-3b89-47e3-8eb7-1f2be6d7123a)
-  1. Latest version of Windows platform SDK. I use Windows SDK 6.1 for Windows Server 2008 and .NET Framework 3.5 (http://www.microsoft.com/downloads/en/details.aspx?FamilyID=e6e1c3df-a74f-4207-8586-711ebe331cdc&displaylang=en - Install both 32 bit and 64 bit components).
-  1. Nullsoft Scriptable Install system, for the installer (NSIS, http://nsis.sourceforge.net/)
-  1. Python, for build scripts (tested with version 2.6, http://www.python.org)
-  1. SCons (tested with version 1.2.0, http://www.scons.org)
+  1. MS Visual Studio (tested with VS 2017 Community Edition)
+  1. Windows SDK (tested with Windows 10 SDK - 10.0.17763.0)
+  1. NSIS - Nullsoft Scriptable Install system, for the installer (NSIS, http://nsis.sourceforge.net/)
+  1. Python, for build scripts (tested with version 2.7, http://www.python.org). Make sure you also have PIP (a tool for installing python packages) installed by following instructions at https://packaging.python.org/tutorials/installing-packages/.
+  1. SCons (tested with version 1.2.0, http://www.scons.org). Please use "pip install scons" to get this.
   1. You will need the Plug-in SDKs for all the supported host applications. More info about this in the **Host SDKs** section below.
 
 ## Host SDKs ##
@@ -31,39 +29,22 @@ Frameserver works as a plug-in for various video editing 'host' applications and
 
   * Vegas Pro Plug-in SDK: http://www.sonycreativesoftware.com/download/devkits - look for 'Video Plug-In Development Kit'
   * Premiere Pro Plug-in SDK: http://www.adobe.com/devnet/premiere/sdk/cs5/
-  * EditStudio SDK: http://www.mediachance.com/video/index.html - look for 'EditStudio SDK'
-  * MediaStudio Pro SDK: http://www.ulead.com/download/sdk/license.htm - accept the license & in the next page download 'VIO Module'
-  * Wax Plug-in SDK: Included in the codebase.
 
 Once downloaded, place the host SDK files in the following hierarchy:
 ```
 src/SDKs
-  |-- EditStudio
-  |     +-- Src
-  |     +-- Include
-  |           +-- ES_Plugin
-  |-- MediaStudioPro
-  |     +-- Include
-  |     +-- Lib
-  |          +-- Debug
-  |          +-- Release
   +-- Premiere
   |     +-- compiler
   |     +-- cs4
   |     +-- cs5
-  +-- Vegas
-  |     +-- ffp
-  |     +-- fio
-  |          +-- libFileIO
   +-- VegasV2
   |     +-- libFileIO
   +-- Wax
 ```
 ## Steps to build ##
 
-  1. Open a command prompt
+  1. Open "x64 Native Tools Command Prompt for VS 2017" or the equivalent x64 build terminal in your Visual Studio setup.
   1. Set the following environment variables in your command line (you can also do this permanently in your "System properties" dialog under the "Advanced > Environment Variables" section):
-    * INCLUDE: set it to your VC6 compatible platform SDK include and include\mfc directories. For e.g.<br>  set INCLUDE="C:\Microsoft SDKs\Windows Server 2003 PSDK\include;C:\Microsoft SDKs\Windows Server 2003 PSDK\include\mfc;"
-    * LIB: set it to your VC6 compatible platform SDK lib directory. For e.g.<br>  set LIB=C:\Microsoft SDKs\Windows Server 2003 PSDK\lib;
+    * NSIS: set it to the full path where you have the "makensis.exe" file of your NSIS installation.
     * Add your python install directory to the path. (this is where SCons gets installed by default as well). For e.g.<br>  set PATH=%PATH%;C:\Python26
-  1. From the root directory of the codebase (where you'll find the file "SConstruct"), run "scons installer". This should build the installer and place it under "bin\fssetup.exe"
+  1. From the root directory of the codebase (where you'll find the file "SConstruct"), run "scons installer". This should build the installer and place it as "fssetup.exe"

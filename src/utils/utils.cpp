@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@ int FPU_enabled, MMX_enabled;
 #define CPUF_SUPPORTS_MMX      (0x00000004L)
 
 // MMX doesn't work with the amd64 build we are making.
-#if defined(WIN64)
+#if defined(_M_X64)
 void CpuDetect() {
   FPU_enabled = 0;
   MMX_enabled = 0;
@@ -35,7 +35,7 @@ void CpuDetect() {
 void mmx_ConvertRGB32toYUY2(unsigned char *src,unsigned char *dst,int src_pitch, int dst_pitch,int w, int h) {
   // Shouldn't be called.
 }
-#else  // defined(WIN64)
+#else  // defined(_M_X64)
 long __declspec(naked) CpuDetectFlag(void) {
   __asm {
     push  ebp
@@ -204,4 +204,70 @@ outloop:
 #undef RGBOFFSET
 #undef YUVOFFSET
 }
-#endif  // defined(WIN64)
+
+extern "C" void fast_memcpy(void *_dst, const void *_src, size_t _size) {
+#define _SRC	esi
+#define _DST	edi
+#define _LEN	ebx
+#define _DELTA	ecx
+  __asm {
+    mov		_DST, [_dst]
+    mov		_SRC, [_src]
+    mov		_LEN, [_size]
+
+    prefetchnta[_SRC + 0]
+    prefetchnta[_SRC + 64]
+    prefetchnta[_SRC + 128]
+    prefetchnta[_SRC + 192]
+    prefetchnta[_SRC + 256]
+
+    cld
+    cmp			_LEN, 40h; 64 - byte blocks
+    jb			L_tail
+
+    mov			_DELTA, _DST
+    and			_DELTA, 63
+    jz			L_next
+    xor			_DELTA, -1
+    add			_DELTA, 64
+    sub			_LEN, _DELTA
+    rep			movsb
+    L_next :
+      mov			_DELTA, _LEN
+      and			_LEN, 63
+      shr			_DELTA, 6; len / 64
+      jz			L_tail
+
+      ALIGN 8
+      L_loop:
+        prefetchnta[_SRC + 320]
+        movq		mm0, [_SRC + 0]
+        movq		mm1, [_SRC + 8]
+        movq		mm2, [_SRC + 16]
+        movq		mm3, [_SRC + 24]
+        movq		mm4, [_SRC + 32]
+        movq		mm5, [_SRC + 40]
+        movq		mm6, [_SRC + 48]
+        movq		mm7, [_SRC + 56]
+        movntq[_DST + 0], mm0
+        movntq[_DST + 8], mm1
+        movntq[_DST + 16], mm2
+        movntq[_DST + 24], mm3
+        movntq[_DST + 32], mm4
+        movntq[_DST + 40], mm5
+        movntq[_DST + 48], mm6
+        movntq[_DST + 56], mm7
+        add		_SRC, 64
+        add		_DST, 64
+        dec		_DELTA
+        jnz		L_loop
+
+      sfence
+      emms
+
+      L_tail :
+        mov			_DELTA, _LEN
+        rep			movsb
+  }
+}
+#endif  // defined(_WIN64)

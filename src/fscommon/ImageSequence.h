@@ -38,11 +38,11 @@ enum {
 };
 
 extern "C" {
-IMAGESEQUENCE_API void SaveImageSequence(DfscData* vars, const char* pathFormat, int imageFormat);
-typedef void (*fxnSaveImageSequence)(DfscData* vars, const char* pathFormat, int imageFormat);
+IMAGESEQUENCE_API void SaveImageSequence(DfscData* vars, const TCHAR* pathFormat, int imageFormat);
+typedef void (*fxnSaveImageSequence)(DfscData* vars, const TCHAR* pathFormat, int imageFormat);
 
-IMAGESEQUENCE_API bool CheckAndPreparePath(const char* pathFormat);
-typedef bool (*fxnCheckAndPreparePath)(const char* pathFormat);
+IMAGESEQUENCE_API bool CheckAndPreparePath(const TCHAR* pathFormat);
+typedef bool (*fxnCheckAndPreparePath)(const TCHAR* pathFormat);
 };
 
 #endif  // FSCOMMON_IMAGESEQUENCE_H

@@ -1,6 +1,6 @@
 /**
  * Debugmode Frameserver
- * Copyright (C) 2002-2009 Satish Kumar, All Rights Reserved
+ * Copyright (C) 2002-2019 Satish Kumar, All Rights Reserved
  * http://www.debugmode.com/
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,11 +26,9 @@
 #include "fscommon_resource.h"
 #include "fscommon.h"
 
-#pragma warning(disable:4996)
-
 // ----------------------------------------------------------------------------------------
 // The following code comes from http://www.wischik.com/lu/programmer/setdlgitemurl.html
-// Modifications were made to pass in the 'bkcolorid' for the url's background color.
+// Modifications were made to pass in the 'bkcolor' for the url's background color.
 // ----------------------------------------------------------------------------------------
 
 #ifndef IDC_HAND
@@ -52,7 +50,8 @@ typedef struct {
   TCHAR* url;
   WNDPROC oldproc;
   HFONT hf;
-  int bkcolorid;
+  LONG fontWeight;
+  COLORREF bkcolor;
 } TUrlData;
 // I'm a miser and only defined a single structure, which is used by both
 // the control-subclass and the dialog-subclass. Both of them use 'oldproc' of course.
@@ -65,7 +64,7 @@ typedef struct {
 // This way our code works fine on dialogs of any font.
 
 // SetDlgItemUrl: this is the routine that sets up the subclassing.
-void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, int bkcolorid) { // nb. vc7 has crummy warnings about 32/64bit. My code's perfect! That's why I hide the warnings.
+void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, COLORREF bkcolor, LONG fontWeight) { // nb. vc7 has crummy warnings about 32/64bit. My code's perfect! That's why I hide the warnings.
   #pragma warning( push )
   #pragma warning( disable: 4312 4244 )
   // First we'll subclass the edit control
@@ -75,15 +74,18 @@ void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, int bkcolorid) { // nb. vc7 ha
   if (hold != NULL) { // if it had been subclassed before, we merely need to tell it the new url
     TUrlData* ud = (TUrlData*)GlobalLock(hold);
     delete[] ud->url;
-    ud->url = new TCHAR[_tcslen(url) + 1]; _tcscpy(ud->url, url);
+    size_t len = _tcslen(url) + 1;
+    ud->url = new TCHAR[len]; _tcscpy_s(ud->url, len, url);
   } else {HGLOBAL hglob = GlobalAlloc(GMEM_MOVEABLE, sizeof(TUrlData));
-          TUrlData* ud = (TUrlData*)GlobalLock(hglob);
-          ud->oldproc = (WNDPROC)GetWindowLongPtr(hctl, GWLP_WNDPROC);
-          ud->url = new TCHAR[_tcslen(url) + 1]; _tcscpy(ud->url, url);
-          ud->hf = 0; ud->bkcolorid = 0;
-          GlobalUnlock(hglob);
-          SetProp(hctl, _T("href_dat"), hglob);
-          SetWindowLongPtr(hctl, GWLP_WNDPROC, (LONG)UrlCtlProc);}
+    TUrlData* ud = (TUrlData*)GlobalLock(hglob);
+    ud->oldproc = (WNDPROC)GetWindowLongPtr(hctl, GWLP_WNDPROC);
+    size_t len = _tcslen(url) + 1;
+    ud->url = new TCHAR[len]; _tcscpy_s(ud->url, len, url);
+    ud->hf = 0; ud->bkcolor = 0;
+    GlobalUnlock(hglob);
+    SetProp(hctl, _T("href_dat"), hglob);
+    SetWindowLongPtr(hctl, GWLP_WNDPROC, (LONG_PTR)UrlCtlProc);
+  }
   //
   // Second we subclass the dialog
   hold = (HGLOBAL)GetProp(hdlg, _T("href_dlg"));
@@ -92,11 +94,12 @@ void SetDlgItemUrl(HWND hdlg, int id, TCHAR* url, int bkcolorid) { // nb. vc7 ha
     TUrlData* ud = (TUrlData*)GlobalLock(hglob);
     ud->url = 0;
     ud->oldproc = (WNDPROC)GetWindowLongPtr(hdlg, GWLP_WNDPROC);
-    ud->bkcolorid = bkcolorid;
+    ud->bkcolor = bkcolor;
+    ud->fontWeight = fontWeight;
     ud->hf = 0; // the font will be created lazilly, the first time WM_CTLCOLORSTATIC gets called
     GlobalUnlock(hglob);
     SetProp(hdlg, _T("href_dlg"), hglob);
-    SetWindowLongPtr(hdlg, GWLP_WNDPROC, (LONG)UrlDlgProc);
+    SetWindowLongPtr(hdlg, GWLP_WNDPROC, (LONG_PTR)UrlDlgProc);
   }
   #pragma warning( pop )
 }
@@ -119,7 +122,7 @@ LRESULT CALLBACK UrlCtlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   { HWND hdlg = GetParent(hwnd); if (hdlg == 0) hdlg = hwnd;
     ShellExecute(hdlg, _T("open"), ud.url, NULL, NULL, SW_SHOWNORMAL);} break;
   case WM_SETCURSOR:
-  { SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
+  { SetCursor(LoadCursor(NULL, IDC_HAND));
     return TRUE;}
   case WM_NCHITTEST:
   { return HTCLIENT;   // because normally a static returns HTTRANSPARENT, so disabling WM_SETCURSOR
@@ -150,8 +153,8 @@ LRESULT CALLBACK UrlDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     // (1) Leave the text opaque. This will allow us to re-SetDlgItemText without it looking wrong.
     // (2) SetBkColor. This background colour will be used underneath each character cell.
     // (3) return HBRUSH. This background colour will be used where there's no text.
-    SetTextColor(hdc, RGB(0, 0, 255));
-    SetBkColor(hdc, GetSysColor(ud.bkcolorid));
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkColor(hdc, ud.bkcolor);
     if (ud.hf == 0) { // we use lazy creation of the font. That's so we can see font was currently being used.
       TEXTMETRIC tm; GetTextMetrics(hdc, &tm);
       LOGFONT lf;
@@ -159,7 +162,7 @@ LRESULT CALLBACK UrlDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       lf.lfWidth = 0;
       lf.lfEscapement = 0;
       lf.lfOrientation = 0;
-      lf.lfWeight = tm.tmWeight;
+      lf.lfWeight = ud.fontWeight;
       lf.lfItalic = tm.tmItalic;
       lf.lfUnderline = TRUE;
       lf.lfStrikeOut = tm.tmStruckOut;
@@ -178,7 +181,7 @@ LRESULT CALLBACK UrlDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     // I have supressed the warnings for now, because I hate them...
       #pragma warning( push )
       #pragma warning( disable: 4311 )
-    return (BOOL)GetSysColorBrush(ud.bkcolorid);
+    return (BOOL)CreateSolidBrush(ud.bkcolor);
       #pragma warning( pop )
   }
   }
@@ -215,7 +218,7 @@ void ShowUpdateNotificationIfRequired(HWND dlg) {
   GetWindowRect(dlg, &windowRect);
   int diffHeight = 0;
   if (_tcslen(updateUrl) != 0) {
-    SetDlgItemUrl(dlg, IDC_UPDATE_URL, updateUrl, COLOR_INFOBK);
+    SetDlgItemUrl(dlg, IDC_UPDATE_URL, updateUrl, RGB(255,0,0), FW_BOLD);
     diffHeight = clientRect.bottom - urlRect.bottom;
   } else {
     diffHeight = labelRect.top - clientRect.bottom;
@@ -297,7 +300,7 @@ DLGPROCRET CALLBACK DummyAboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) 
   return FALSE;
 }
 
-bool FormatUpdateRequestUrl(TCHAR* updateUrl) {
+bool FormatUpdateRequestUrl(TCHAR* updateUrl, int updateUrlSize) {
   HKEY key = 0;
 
   RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0,
@@ -362,19 +365,19 @@ bool FormatUpdateRequestUrl(TCHAR* updateUrl) {
   // id = installId
   // ov = os version
   // av = app version
-  _tcscpy(updateUrl, _T("http://www.debugmode.com/bin/update.php?an=fs&rv=1"));
-  _tcscat(updateUrl, _T("&pn="));
-  _tcscat(updateUrl, appFileName);
-  _tcscat(updateUrl, _T("&ov="));
-  _itot(osver.dwMajorVersion, updateUrl + _tcslen(updateUrl), 10);
-  _tcscat(updateUrl, _T("."));
-  _itot(osver.dwMinorVersion, updateUrl + _tcslen(updateUrl), 10);
-  _tcscat(updateUrl, _T("."));
-  _itot(osver.dwBuildNumber, updateUrl + _tcslen(updateUrl), 10);
-  _tcscat(updateUrl, _T("&av="));
-  _tcscat(updateUrl, version);
-  _tcscat(updateUrl, _T("&id="));
-  _tcscat(updateUrl, guidstr);
+  _tcscpy_s(updateUrl, updateUrlSize, _T("https://www.debugmode.com/bin/update.php?an=fs&rv=1"));
+  _tcscat_s(updateUrl, updateUrlSize, _T("&pn="));
+  _tcscat_s(updateUrl, updateUrlSize, appFileName);
+  _tcscat_s(updateUrl, updateUrlSize, _T("&ov="));
+  _itot_s(osver.dwMajorVersion, updateUrl + _tcslen(updateUrl), updateUrlSize - _tcslen(updateUrl), 10);
+  _tcscat_s(updateUrl, updateUrlSize, _T("."));
+  _itot_s(osver.dwMinorVersion, updateUrl + _tcslen(updateUrl), updateUrlSize - _tcslen(updateUrl), 10);
+  _tcscat_s(updateUrl, updateUrlSize, _T("."));
+  _itot_s(osver.dwBuildNumber, updateUrl + _tcslen(updateUrl), updateUrlSize - _tcslen(updateUrl), 10);
+  _tcscat_s(updateUrl, updateUrlSize, _T("&av="));
+  _tcscat_s(updateUrl, updateUrlSize, version);
+  _tcscat_s(updateUrl, updateUrlSize, _T("&id="));
+  _tcscat_s(updateUrl, updateUrlSize, guidstr);
 
   return true;
 }
@@ -382,14 +385,15 @@ bool FormatUpdateRequestUrl(TCHAR* updateUrl) {
 DWORD WINAPI UpdateCheckThreadProc(LPVOID param) {
   bool connected = false;
   DWORD connFlags = 0;
-
+  
   if (InternetGetConnectedState(&connFlags, 0)) {    // are we connected?
     TCHAR updateUrl[300];
-    if (FormatUpdateRequestUrl(updateUrl)) {
+    if (FormatUpdateRequestUrl(updateUrl, _countof(updateUrl))) {
       HINTERNET hwi = InternetOpen(_T("Debugmode update check"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL,
           INTERNET_FLAG_NO_CACHE_WRITE);
       if (hwi != NULL) {
-        updateCheckInternetHandle = InternetOpenUrl(hwi, updateUrl, NULL, 0, 0, 0);
+        updateCheckInternetHandle = InternetOpenUrl(hwi, updateUrl, NULL, 0,
+          INTERNET_FLAG_SECURE | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS, 0);
 
         if (updateCheckInternetHandle != NULL) {
           connected = true;
