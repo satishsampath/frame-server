@@ -1,7 +1,7 @@
 License agreement for DebugMode FrameServer
 -------------------------------------------------
 
-Copyright © 2000-2019 Satish Sampath and contributors
+Copyright © 2000-2020 Satish Sampath and contributors
 http://www.debugmode.com/
 
 Contributors:

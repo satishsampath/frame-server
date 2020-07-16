@@ -1,51 +1,55 @@
 Import('env')
 
-# ---- libFileIO ----
-fio_env = env.Clone()
+for sdkVersionNumber in range(2, 4):
+  strVersionNumber = str(sdkVersionNumber)
+  sdkDir = '../sdks/VegasV' + strVersionNumber + '/'
 
-fio_env['CPPDEFINES'] += ['_LIB']
-fio_env['CPPPATH'] = ['../sdks/VegasV2/libFileIO']
-fio_env['LIBS'] += ['rpcrt4.lib']
-fio_env['LINKFLAGS'] += ['/IGNOREIDL']
+  # ---- libFileIO ----
+  fio_env = env.Clone()
 
-target = 'libFileIO'
-fio_env['PDB'] = target + '.pdb'
-bin = fio_env.Library(
-  target,
-  [
-    '../sdks/VegasV2/libFileIO/SfAudioUtil.cpp',
-    '../sdks/VegasV2/libFileIO/SfMem.cpp',
-    '../sdks/VegasV2/libFileIO/SfReadStreams.cpp',
-    '../sdks/VegasV2/libFileIO/SfTemplate.cpp',
-    '../sdks/VegasV2/libFileIO/SfWaveFormat.cpp'
-  ]
-)
+  fio_env['CPPDEFINES'] += ['_LIB']
+  fio_env['CPPPATH'] = [sdkDir + 'libFileIO']
+  fio_env['LIBS'] += ['rpcrt4.lib']
+  fio_env['LINKFLAGS'] += ['/IGNOREIDL']
 
-# ---- VegasV2 ----
-env = env.Clone()
+  target = 'libFileIOv' + strVersionNumber
+  fio_env['PDB'] = target + '.pdb'
+  bin = fio_env.Library(
+    target,
+    [
+      sdkDir + 'libFileIO/SfAudioUtil.cpp',
+      sdkDir + 'libFileIO/SfMem.cpp',
+      sdkDir + 'libFileIO/SfReadStreams.cpp',
+      sdkDir + 'libFileIO/SfTemplate.cpp',
+      sdkDir + 'libFileIO/SfWaveFormat.cpp'
+    ]
+  )
 
-env['CPPDEFINES'] += ['_USRDLL']
-env['CPPPATH'] = ['../sdks/VegasV2/libFileIO', '..', '../fscommon', '../dfsc', '../utils']
-env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'libfileio.lib']
-env['LIBPATH'] += ['../VegasV2']
-env['LINKFLAGS'] += ['/IGNOREIDL']
+  # ---- VegasV2 ----
+  dll_env = env.Clone()
 
-target = 'dfscVegasOut'
-env['PDB'] = target + '.pdb'
-bin = env.SharedLibrary(
-  target,
-  [
-    'VegasFSMain.cpp',
-    'VegasFS.cpp',
-    'VegasFSRender.cpp',
-    'VegasFS.def',
-    env.RES('VegasFS.rc'),
-  ]
-)
+  dll_env['CPPDEFINES'] += ['_USRDLL', 'VEGAS_SDK_V' + strVersionNumber]
+  dll_env['CPPPATH'] = [sdkDir + 'libFileIO', '..', '../fscommon', '../dfsc', '../utils']
+  dll_env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'libfileiov' + strVersionNumber + '.lib']
+  dll_env['LIBPATH'] += ['../VegasV2']
+  dll_env['LINKFLAGS'] += ['/IGNOREIDL']
 
-# Add a post-build step to embed the manifest using mt.exe
-# The number at the end of the line indicates the file type (1: EXE; 2:DLL).
-if not env['dbg']:
-  env.AddPostAction(bin,
-    'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
-env.Install('#/src/dist/bin', bin[0])
+  target = 'dfscVegasOutV' + strVersionNumber
+  dll_env['PDB'] = target + '.pdb'
+  bin = dll_env.SharedLibrary(
+    target,
+    [
+      dll_env.Object('VegasFSMainV' + strVersionNumber, 'VegasFSMain.cpp'),
+      dll_env.Object('VegasFSV' + strVersionNumber, 'VegasFS.cpp'),
+      dll_env.Object('VegasFSRenderV' + strVersionNumber, 'VegasFSRender.cpp'),
+      'VegasFS.def',
+      dll_env.RES('VegasFSV' + strVersionNumber + '.res', 'VegasFS.rc'),
+    ]
+  )
+
+  # Add a post-build step to embed the manifest using mt.exe
+  # The number at the end of the line indicates the file type (1: EXE; 2:DLL).
+  if not dll_env['dbg']:
+    dll_env.AddPostAction(bin,
+      'mt.exe -nologo -manifest ${TARGET}.manifest -outputresource:$TARGET;2')
+  dll_env.Install('#/src/dist/bin', bin[0])

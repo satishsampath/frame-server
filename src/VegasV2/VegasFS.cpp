@@ -35,14 +35,22 @@ const GUID CLSID_VegasFS = {
   0xb4b9862d, 0xa3c2, 0x4f1a, { 0xc9, 0xd6, 0xa8, 0xc2, 0x35, 0xf4, 0xc9, 0xee }
 };
 
-// {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB3}
-const GUID GUID_FrameServerPreset = {
-  0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb3 }
+// The first preset doesn't show up in the Vegas UI for whatever reason, so we define
+// it twice with the hope of showing the remaining 4.
+#define NUM_PRESETS 5
+const GUID GUID_FrameServerPresets[NUM_PRESETS] = {
+  // {7EE93CF0-6FDE-4AC7-BDB8-EE6D811392DB}
+  { 0x7ee93cf0, 0x6fde, 0x4ac7, { 0xbd, 0xb8, 0xee, 0x6d, 0x81, 0x13, 0x92, 0xdb } },
+  // {8A034144-D787-4AA7-9F43-E2DB07FED15A}
+  { 0x8a034144, 0xd787, 0x4aa7, { 0x9f, 0x43, 0xe2, 0xdb, 0x07, 0xfe, 0xd1, 0x5a } },
+  // {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB3}
+  { 0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb3 } },
+  // {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB4}
+  { 0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb4 } },
+  // {DA8BC590-420F-44BB-8D83-BFD38B075A74}
+  { 0xda8bc590, 0x420f, 0x44bb, { 0x8d, 0x83, 0xbf, 0xd3, 0x8b, 0x07, 0x5a, 0x74 } }
 };
-// {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB4}
-const GUID GUID_FrameServerPreset1 = {
-  0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb4 }
-};
+static const int sAudioSampleRates[NUM_PRESETS] = { 16000, 16000, 32000, 44100, 48000 };
 
 #define TEMPLATE_MINOR_VERSION   (2 << 16)
 #define TEMPLATE_SUB_VERSION     (0 << 8)
@@ -268,7 +276,7 @@ STDMETHODIMP VegasFS::GetPresetCount(LONG* pcPresets) {
   HRESULT hr = S_OK;
 
   if (pcPresets) {
-    *pcPresets = 2;
+    *pcPresets = NUM_PRESETS;
     hr = S_OK;
   } else {
     hr = E_INVALIDARG;
@@ -340,17 +348,10 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
     LONG ixPreset) {
   HRESULT hr = S_OK;
 
-  if (ppTemplate && ixPreset <= 1) {
+  if (ppTemplate && ixPreset < NUM_PRESETS) {
     TCHAR sName[MAX_PATH];
-    TCHAR sDesc[MAX_PATH];
-    if (ixPreset <= 0)
-    {
-      _tcscpy(sName,L"Project Default");
-      _tcscpy(sDesc,L"Default");
-    } else {
-      _tcscpy(sName,L"Project Default");
-      _tcscpy(sDesc,L"Default");
-    }
+    TCHAR sDesc[] = _T("");
+    _stprintf(sName, _T("Audio: %.1fKhz, Video: project default"), sAudioSampleRates[ixPreset] / 1000.0f);
     if (SUCCEEDED(hr)) {
       hr = AllocateTemplate(ppTemplate,
           sizeof(ExtraEncoderParameter),
@@ -362,19 +363,16 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
 
         pTemplate->id = ixPreset;
         pTemplate->iidOwner = CLSID_VegasFS;
-        if (ixPreset <= 0)
-          pTemplate->guid = GUID_FrameServerPreset;
-        else
-          pTemplate->guid = GUID_FrameServerPreset1;
+        pTemplate->guid = GUID_FrameServerPresets[ixPreset];
 
         // audio
         pTemplate->Audio.cbStruct = NUMBYTES(pTemplate->Audio);
         pTemplate->Audio.cStreams = 1;
 
         SfAudio_InitWfxExt(&pTemplate->Audio.Render.wfx,
-            WAVE_FORMAT_PCM, 44100, 16, 2, 0);
+            WAVE_FORMAT_PCM, sAudioSampleRates[ixPreset], 16, 2, 0);
         SfAudio_InitWfxExt(&pTemplate->Audio.Codec.wfx,
-            WAVE_FORMAT_PCM, 44100, 16, 2, 0);
+            WAVE_FORMAT_PCM, sAudioSampleRates[ixPreset], 16, 2, 0);
 
         // video
         pTemplate->Video.cbStruct = NUMBYTES(pTemplate->Video);
@@ -416,18 +414,16 @@ STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
 
 STDMETHODIMP VegasFS::GetPresetIndexFromGuid(const GUID* pGuid,
     LONG* pixPreset) {
-  HRESULT hr = E_FAIL;
-
+  HRESULT hr = E_INVALIDARG;
   if (pGuid && pixPreset) {
-    if (*pGuid == GUID_FrameServerPreset) {
-      *pixPreset = 0;
-      hr = S_OK;
-    } else if (*pGuid == GUID_FrameServerPreset1) {
-      *pixPreset = 1;
-      hr = S_OK;
+    *pixPreset = 0;
+    for (int i = 0; i < NUM_PRESETS; ++i) {
+      if (*pGuid == GUID_FrameServerPresets[i]) {
+        *pixPreset = i;
+        hr = S_OK;
+        break;
+      }
     }
-  } else {
-    hr = E_INVALIDARG;
   }
 
   return hr;
@@ -569,6 +565,15 @@ STDMETHODIMP VegasFS::GetTemplateInfo(PCSFTEMPLATEx pTemplate,
     SFFIO_TEMPLATE_INFO eInfoType) {
   return E_NOTIMPL;
 }
+
+#if defined(VEGAS_SDK_V3)
+STDMETHODIMP VegasFS::GetTemplateInfoText(PCSFTEMPLATEx pTemplate,
+    LPWSTR pszwInfo, 
+    UINT cchInfo,
+    SFFIO_TEMPLATE_INFOTEXT eInfoType) {
+  return E_NOTIMPL;
+}
+#endif
 
 STDMETHODIMP VegasFS::GetPropertyPageCount(LONG* pcFreePages,
     LONG* pcPagesForSale,

@@ -25,6 +25,8 @@
 #include "SfRenderFileClass.h"
 #include "SfMeta.h"
 
+#define DEBUG_PRINT_FUNCTION_NAME OutputDebugString(L"DMFS: " __FUNCTIONW__ L"\n");
+
 class VegasFS : public ISfRenderFileClass,
                 public ISfRenderMetaSupport2 {
 public:
@@ -64,6 +66,10 @@ public:
       PCSFTEMPLATEx ptplSource, SFFIO_CONFORM_TEMPLATE_REASON eConform);
   STDMETHOD(GetTemplateInfo) (PCSFTEMPLATEx pTemplate, LPVOID pvInfo, UINT cbInfo,
       SFFIO_TEMPLATE_INFO eInfoType);
+#if defined(VEGAS_SDK_V3)
+  STDMETHOD(GetTemplateInfoText) (PCSFTEMPLATEx pTemplate, LPWSTR pszwInfo, UINT cchInfo,
+      SFFIO_TEMPLATE_INFOTEXT eInfoType);
+#endif
   STDMETHOD(GetPropertyPageCount) (LONG * pcFreePages, LONG * pcPagesForSale,
       SFFILERENDERPAGEOPTIONS * prPageOptions);
   STDMETHOD(GetPropertyPage) (LONG ixIndex, IPropertyPage * *ppPropPage);
