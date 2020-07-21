@@ -37,7 +37,7 @@ const GUID CLSID_VegasFS = {
 
 // The first preset doesn't show up in the Vegas UI for whatever reason, so we define
 // it twice with the hope of showing the remaining 4.
-#define NUM_PRESETS 5
+#define NUM_PRESETS 6
 const GUID GUID_FrameServerPresets[NUM_PRESETS] = {
   // {7EE93CF0-6FDE-4AC7-BDB8-EE6D811392DB}
   { 0x7ee93cf0, 0x6fde, 0x4ac7, { 0xbd, 0xb8, 0xee, 0x6d, 0x81, 0x13, 0x92, 0xdb } },
@@ -48,9 +48,11 @@ const GUID GUID_FrameServerPresets[NUM_PRESETS] = {
   // {34C844B1-BDD7-eab8-8CF3-B6828FDD1FB4}
   { 0x34c844b1, 0xbdd7, 0xeab8, { 0x8c, 0xf3, 0xb6, 0x82, 0x8f, 0xdd, 0x1f, 0xb4 } },
   // {DA8BC590-420F-44BB-8D83-BFD38B075A74}
-  { 0xda8bc590, 0x420f, 0x44bb, { 0x8d, 0x83, 0xbf, 0xd3, 0x8b, 0x07, 0x5a, 0x74 } }
+  { 0xda8bc590, 0x420f, 0x44bb, { 0x8d, 0x83, 0xbf, 0xd3, 0x8b, 0x07, 0x5a, 0x74 } },
+  // {E7987AB0-062A-466C-97ED-E5AF181956C1}
+  { 0xe7987ab0, 0x062a, 0x466c, { 0x97, 0xed, 0xe5, 0xaf, 0x18, 0x19, 0x56, 0xc1 } }
 };
-static const int sAudioSampleRates[NUM_PRESETS] = { 16000, 16000, 32000, 44100, 48000 };
+static const int sAudioSampleRates[NUM_PRESETS] = { 16000, 16000, 32000, 44100, 48000, 96000 };
 
 #define TEMPLATE_MINOR_VERSION   (2 << 16)
 #define TEMPLATE_SUB_VERSION     (0 << 8)

@@ -271,6 +271,7 @@ FunctionEnd
 
 Function .onInstSuccess
   DeleteRegValue HKEY_CURRENT_USER "SOFTWARE\Debugmode\FrameServer" "updateUrl"
+  MessageBox MB_OK "Installation complete."
 FunctionEnd
   
 ;----------- begin uninstall settings/section ----------------
