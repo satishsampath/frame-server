@@ -2,10 +2,10 @@
 // Microsoft Developer Studio generated include file.
 // Used by fscommon.rc
 //
-#define IDB_BITMAP1                     101
 #define IDD_NETCLIENT_OPTIONS           101
 #define IDI_FRAMESERVER                 101
 #define IDD_SERVING                     102
+#define IDC_BANNER_BACKGROUND           103
 #define IDC_ABOUT                       1000
 #define IDC_OUTPUTVIDEO                 1000
 #define IDC_EDIT1                       1001

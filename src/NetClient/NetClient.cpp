@@ -69,6 +69,17 @@ void SetFsIconForWindow(HWND wnd) {
   SendMessage(wnd, WM_SETICON, FALSE, (LPARAM)LoadIcon(ghResInst, MAKEINTRESOURCE(IDI_FRAMESERVER)));
 }
 
+BOOL HandleBannerBackgroundForHighDPI(UINT msg, WPARAM wp, LPARAM lp) {
+  if (msg == WM_DRAWITEM) {
+    DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lp;
+    if (dis->CtlID == IDC_BANNER_BACKGROUND) {
+      ::FillRect(dis->hDC, &dis->rcItem, (HBRUSH)::GetStockObject(WHITE_BRUSH));
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 INT_PTR CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
   case WM_INITDIALOG:
@@ -80,6 +91,8 @@ INT_PTR CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp
       EndDialog(dlg, IDCANCEL);
     }
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -95,6 +108,8 @@ INT_PTR CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     if (LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL)
       EndDialog(dlg, 0);
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -303,6 +318,8 @@ INT_PTR CALLBACK NetClientOptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM l
       EndDialog(dlg, LOWORD(wp));
     break;
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -318,6 +335,8 @@ INT_PTR CALLBACK NetClientServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM l
       DialogBox(ghResInst, MAKEINTRESOURCE(IDD_DFABOUTDLG), dlg, AboutDlgProc);
     break;
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 

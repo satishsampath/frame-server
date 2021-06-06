@@ -52,7 +52,7 @@ END
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP  DISCARDABLE     "fshoriz.bmp"
+IDI_FRAMESERVER         BITMAP  DISCARDABLE     "fshoriz.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -89,6 +89,7 @@ BEGIN
                     115,8
     LTEXT           "Format",IDC_STATIC,25,58,22,8
     PUSHBUTTON      "&Cancel",IDCANCEL,171,169,55,14
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 235, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,235,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
@@ -107,18 +108,19 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About..."
 FONT 8, "MS Sans Serif"
 BEGIN
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     DEFPUSHBUTTON   "OK",IDOK,176,141,50,14
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,134,235,1
     LTEXT           "Web :",IDC_STATIC,7,123,20,8
     LTEXT           "https://www.debugmode.com/",IDC_WEBPAGE,32,123,96,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,261,1
-    LTEXT           "© 2000-2020 Satish Kumar. S and contributors\r\nContributors: Victor Tchistiak, N. Ildar",
+    LTEXT           "© 2000-2021 Satish Kumar. S and contributors\r\nContributors: Victor Tchistiak, N. Ildar",
                     IDC_STATIC,7,29,184,20
     EDITTEXT        IDC_WARNING,16,53,210,68,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "3.1",IDC_VERSION,206,29,15,8
+    LTEXT           "3.1.1",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -159,6 +161,7 @@ BEGIN
                     WS_DISABLED,90,44,39,10
     CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON | 
                     WS_DISABLED,137,44,35,10
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
@@ -180,6 +183,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,62,234,1
     CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH | 
                     WS_BORDER,10,44,213,7
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,4,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
@@ -204,6 +208,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,109,130,55,14
     PUSHBUTTON      "Cancel",IDCANCEL,171,130,55,14
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,235,1
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
@@ -226,6 +231,7 @@ BEGIN
     LTEXT           "",IDC_AUDIOSTATS,41,77,182,8
     LTEXT           "Statistics:",IDC_STATIC,4,53,31,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,91,235,1
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT

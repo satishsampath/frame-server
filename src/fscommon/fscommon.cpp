@@ -60,6 +60,17 @@ void SetFsIconForWindow(HWND wnd) {
           IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR));
 }
 
+BOOL HandleBannerBackgroundForHighDPI(UINT msg, WPARAM wp, LPARAM lp) {
+  if (msg == WM_DRAWITEM) {
+    DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lp;
+    if (dis->CtlID == IDC_BANNER_BACKGROUND) {
+      ::FillRect(dis->hDC, &dis->rcItem, (HBRUSH)::GetStockObject(WHITE_BRUSH));
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 bool LoadImageSequenceModule() {
   if (imageSequenceModule != NULL)
     return true;
@@ -99,7 +110,10 @@ DLGPROCRET CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   case WM_COMMAND:
     if (LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL)
       EndDialog(dlg, 0);
+    break;
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -283,6 +297,8 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     }
     break;
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -297,6 +313,8 @@ DLGPROCRET CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM
       EndDialog(dlg, IDCANCEL);
     }
   }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
@@ -324,19 +342,20 @@ DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       EnableWindow(appwnd, FALSE);
     }
     break;
-  case WM_CTLCOLORSTATIC:
-  {
-    HDC hdc = (HDC)wp;
-    HWND wnd = (HWND)lp;
-    int id = GetDlgCtrlID(wnd);
-    if (id == IDC_UPDATE_URL || id == IDC_UPDATE_LABEL) {
-      SetTextColor(hdc, RGB(255, 255, 255));
-      SetBkColor(hdc, RGB(255, 0, 0));
-      return (BOOL)CreateSolidBrush(RGB(255, 0, 0));
+  case WM_CTLCOLORSTATIC: {
+      HDC hdc = (HDC)wp;
+      HWND wnd = (HWND)lp;
+      int id = GetDlgCtrlID(wnd);
+      if (id == IDC_UPDATE_URL || id == IDC_UPDATE_LABEL) {
+        SetTextColor(hdc, RGB(255, 255, 255));
+        SetBkColor(hdc, RGB(255, 0, 0));
+        return (BOOL)CreateSolidBrush(RGB(255, 0, 0));
+      }
+      break;
     }
   }
-  break;
-  }
+  if (HandleBannerBackgroundForHighDPI(msg, wp, lp))
+    return TRUE;
   return FALSE;
 }
 
