@@ -257,6 +257,7 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
   LONGLONG curpos, nextpos;
   curpos = (second * (LONGLONG)FfpHeader.Audio.wfx.nSamplesPerSec);
   nextpos = ((second + 1) * (LONGLONG)FfpHeader.Audio.wfx.nSamplesPerSec);
+  nextpos = min(nextpos, FfpHeader.Audio.ccTotal);
   ULONG ccToRead = (ULONG)(nextpos - curpos), ccActuallyRead = 0;
   *datalen = ccToRead * FfpHeader.Audio.wfx.nBlockAlign;
   if (*data == NULL)
@@ -268,16 +269,18 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
 
   CMappingOfSfMemoryToken mtmap(mt);
   void* sourcePtr = NULL;
-  if (hr == S_OK)
+  if (hr == S_OK || hr == S_FALSE)
     hr = mtmap.GetPointer(&sourcePtr);
 
-  if (hr == S_OK) {
+  if (sourcePtr != NULL) {
     vars->audioBytesRead = ccActuallyRead * FfpHeader.Audio.wfx.nBlockAlign;
     memcpy(*data, sourcePtr, vars->audioBytesRead);
     memset(*data + ccActuallyRead * FfpHeader.Audio.wfx.nBlockAlign, 0,
         (ccToRead - ccActuallyRead) * FfpHeader.Audio.wfx.nBlockAlign);
+    *datalen = ccActuallyRead * FfpHeader.Audio.wfx.nBlockAlign;
   } else {
     vars->audioBytesRead = 0;
+    *datalen = 0;
   }
 
   pIAudioStream->Release();

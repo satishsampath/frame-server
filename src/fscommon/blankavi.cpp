@@ -138,6 +138,7 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
   mmioCreateChunk(file, &movilist, MMIO_CREATELIST);
 
   unsigned int i;
+  unsigned long *audioBlockByteLen = new unsigned long[numaudioblocks];
   for (i = 0; i < numaudioblocks; i++) {
     MMCKINFO audioframe;
     audioframe.cksize = 0;
@@ -148,9 +149,11 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
     unsigned long datalen;
     if (!(*readSamples)(i, readData, &data, &datalen)) {
       mmioClose(file, 0);
+      delete[] audioBlockByteLen;
       DeleteFile(filename);
       return true;
     }
+    audioBlockByteLen[i] = datalen;
     mmioWrite(file, (LPCSTR)data, datalen);
     free(data);
 
@@ -177,28 +180,29 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
   indexchunk.ckid = mmioFOURCC('i', 'd', 'x', '1');
   mmioCreateChunk(file, &indexchunk, 0);
 
+  AVIINDEXENTRY indexentry;
+  indexentry.ckid = mmioFOURCC('0', '1', 'w', 'b');
+  indexentry.dwFlags = AVIIF_KEYFRAME;
+  indexentry.dwChunkOffset = 4;
   for (i = 0; i < numaudioblocks; i++) {
-    AVIINDEXENTRY indexentry;
-    indexentry.ckid = mmioFOURCC('0', '1', 'w', 'b');
-    indexentry.dwFlags = AVIIF_KEYFRAME;
-    indexentry.dwChunkOffset = 4 + i * (8 + wfx->nSamplesPerSec * wfx->nBlockAlign);
-    indexentry.dwChunkLength = wfx->nSamplesPerSec * wfx->nBlockAlign;
+    indexentry.dwChunkLength = audioBlockByteLen[i];
     mmioWrite(file, (LPCSTR)&indexentry, sizeof(indexentry));
+    indexentry.dwChunkOffset += (8 + indexentry.dwChunkLength);
   }
 
+  indexentry.ckid = mmioFOURCC('0', '0', 'd', 'c');
+  indexentry.dwFlags = AVIIF_KEYFRAME;
+  indexentry.dwChunkLength = 8;
   for (i = 0; i < numframes; i++) {
-    AVIINDEXENTRY indexentry;
-    indexentry.ckid = mmioFOURCC('0', '0', 'd', 'c');
-    indexentry.dwFlags = AVIIF_KEYFRAME;
-    indexentry.dwChunkOffset = 4 + i * (8 + 4 + 4) + numaudioblocks * (8 + wfx->nSamplesPerSec * wfx->nBlockAlign);
-    indexentry.dwChunkLength = 8;
     mmioWrite(file, (LPCSTR)&indexentry, sizeof(indexentry));
+    indexentry.dwChunkOffset += (8 + 4 + 4);
   }
 
   mmioAscend(file, &indexchunk, 0);
 
   mmioAscend(file, &riffinfo, 0);
   mmioClose(file, 0);
+  delete[] audioBlockByteLen;
   return true;
 }
 
