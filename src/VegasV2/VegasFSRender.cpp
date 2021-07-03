@@ -28,6 +28,9 @@
 #include "SfReadStreams.h"
 #include "SfErrors.h"
 #include "VegasFSRender.h"
+#ifdef VEGAS_SDK_V3
+  #include "SfVideo.h"
+#endif
 
 VegasFSRender::VegasFSRender(ISfRenderFileClass* renderFileClass, PCSFTEMPLATEx pTemplate) :
   m_dwRef(0), m_pRenderFileClass(renderFileClass),
@@ -201,8 +204,10 @@ STDMETHODIMP VegasFSRender::Render(ISfProgress* pIProgress) {
   BOOL fUseAudio = pIAudioStream && (m_pTemplate->Audio.cStreams > 0);
   BOOL fUseVideo = pIVideoStream && (m_pTemplate->Video.cStreams > 0);
   if (!fUseVideo) {
-    pIAudioStream->Release();
-    pIVideoStream->Release();
+    if (pIAudioStream)
+      pIAudioStream->Release();
+    if (pIVideoStream)
+      pIVideoStream->Release();
     return SF_E_NOVIDEO;
   }
 
@@ -215,21 +220,31 @@ STDMETHODIMP VegasFSRender::Render(ISfProgress* pIProgress) {
   HRESULT hr = S_OK;
 
   hr = pIVideoStream->GetFrameCount(&FfpHeader.Video.cfTotal);
+  if (FAILED(hr))
+    return hr;
   FfpHeader.Video.dFPS = m_pTemplate->Video.Render.vex.dFPS;
   FfpHeader.Video.ntLength = SfVideo_FramesToTime(
       FfpHeader.Video.cfTotal, FfpHeader.Video.dFPS);
   FfpHeader.Video.bih = m_pTemplate->Video.Render.bih;
   FfpHeader.Video.cbFrameSize = SfDibImageBytes(&FfpHeader.Video.bih);
+
+  // We'll initialize m_bVideoFrame in OnVideoRequest once we know the format
+  // in which to read the video from the Frameserver options dialog.
+  m_bVideoFrame.resize(0);
+
   if (fUseAudio) {
     hr = pIAudioStream->GetSampleCount(&FfpHeader.Audio.ccTotal);
+    if (FAILED(hr))
+      return hr;
     FfpHeader.Audio.wfx = m_pTemplate->Audio.Render.wfx;
     hr = pIAudioStream->GetStreamLength(&FfpHeader.Audio.ntLength);
+    if (FAILED(hr))
+      return hr;
     FfpHeader.Audio.ntLength = SfAudio_CellsToTime(FfpHeader.Audio.ccTotal,
         FfpHeader.Audio.wfx.nSamplesPerSec);
     m_bAudioFrame.resize(
         FfpHeader.Audio.wfx.nSamplesPerSec * FfpHeader.Audio.wfx.nBlockAlign * 2);
   }
-  m_bVideoFrame.resize(FfpHeader.Video.bih.biSizeImage);
 
   FrameServerImpl::Init(!!fUseAudio, FfpHeader.Audio.wfx.nSamplesPerSec,
       FfpHeader.Audio.wfx.wBitsPerSample, FfpHeader.Audio.wfx.nChannels,
@@ -289,8 +304,35 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
 
 void VegasFSRender::OnVideoRequest() {
   ISfReadVideoRenderStream* pIVideoStream = NULL;
-
   m_pReadStreams->GetFirstReadVideoRenderStream(&pIVideoStream, NULL);
+
+  if (m_bVideoFrame.size() == 0) {  // is this the first time? If so, check pixel format & allocate.
+#ifdef VEGAS_SDK_V3
+    // For 8-bit video formats, we convert from 8-bit RGB to the serve format ourselves.
+    // For 10-bit video formats, we ask Vegas to give us in that format so that there is
+    // no lossy conversion.
+    if (serveFormat == sfV210) {
+      SFFILESTREAMFORMATINFO sfi;
+      SfZeroCBStruct(&sfi);
+      HRESULT hr = pIVideoStream->GetReadVideoFormat(&sfi);
+      if (SUCCEEDED(hr)) {
+        sfi.bih.biCompression = FCC_v210;
+        sfi.bih.biBitCount = 32;
+        sfi.bih.biSizeImage = SfYUVImageBytesAndOffsets(&sfi.bih);
+        hr = pIVideoStream->SetRenderFrameFormat(&sfi);
+        TCHAR msg[128];
+        _stprintf_s(msg, _countof(msg), L"SetRenderFrameFormat return code 0x%X, width=%d, height=%d, size=%d",
+          hr, sfi.bih.biWidth, sfi.bih.biHeight, sfi.bih.biSizeImage);
+        OutputDebugString(msg);
+        if (SUCCEEDED(hr)) {
+          FfpHeader.Video.cbFrameSize = sfi.bih.biSizeImage;
+          FfpHeader.Video.bih = sfi.bih;
+        }
+      }
+    }
+#endif // VEGAS_SDK_V3
+    m_bVideoFrame.resize(FfpHeader.Video.bih.biSizeImage);  // allocate frame buffer to receive video.
+  }
 
   SFMEMORYTOKEN mt;
   SfInitLocalMemoryToken(mt, &m_bVideoFrame[0], (LONG)m_bVideoFrame.size());
@@ -308,7 +350,7 @@ void VegasFSRender::OnVideoRequest() {
 
   if (hr == S_OK) {
     int rowBytes = FfpHeader.Video.cbFrameSize / vars->encBi.biHeight;
-    ConvertVideoFrame(sourcePtr, rowBytes, vars);
+    ConvertVideoFrame(sourcePtr, rowBytes, vars, (serveFormat == sfV210) ? idfV210 : idfRGB32);
     pIVideoStream->ReleaseRenderFrame(idFrameLock);
   } else {
     memset(((LPBYTE)vars) + vars->videooffset, 0, vars->videoBytesRead);

@@ -74,6 +74,8 @@ BEGIN
                     102,58,39,10
     CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON,149,
                     58,35,10
+    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON,196,
+                    58,35,10
     CONTROL         "&Write audio as PCM samples in signpost AVI ",
                     IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     26,70,157,10
@@ -120,7 +122,7 @@ BEGIN
     EDITTEXT        IDC_WARNING,16,53,210,68,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "3.1.1",IDC_VERSION,206,29,15,8
+    LTEXT           "4.0",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -161,6 +163,8 @@ BEGIN
                     WS_DISABLED,90,44,39,10
     CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON | 
                     WS_DISABLED,137,44,35,10
+    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED,184,44,35,10
     CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,233,28
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,

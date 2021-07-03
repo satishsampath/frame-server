@@ -35,6 +35,7 @@
 #define IDC_SERVEASRGB24                1400
 #define IDC_SERVEASRGB32                1401
 #define IDC_SERVEASYUY2                 1402
+#define IDC_SERVEASV210                 1403
 #define IDS_ABOUTDLG_COPYRIGHT          59230
 
 // Next default values for new objects

@@ -121,6 +121,7 @@ void UpdateImageSequenceControls(HWND dlg) {
   EnableWindow(GetDlgItem(dlg, IDC_SERVEASRGB24), !saveAsImageSequence);
   EnableWindow(GetDlgItem(dlg, IDC_SERVEASRGB32), !saveAsImageSequence);
   EnableWindow(GetDlgItem(dlg, IDC_SERVEASYUY2), !saveAsImageSequence);
+  EnableWindow(GetDlgItem(dlg, IDC_SERVEASV210), !saveAsImageSequence);
   EnableWindow(GetDlgItem(dlg, IDC_PCMAUDIOINAVI), !saveAsImageSequence);
   EnableWindow(GetDlgItem(dlg, IDC_NETSERVE), !saveAsImageSequence);
   EnableWindow(GetDlgItem(dlg, IDC_NETPORT), !saveAsImageSequence);
@@ -164,7 +165,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       _tcscpy_s(imageSequencePath, _countof(imageSequencePath), _T("C:\\FrameServer Images\\Image######.png"));
 
     CheckDlgButton(dlg, IDC_PCMAUDIOINAVI, pcmAudioInAvi);
-    CheckRadioButton(dlg, IDC_SERVEASRGB24, IDC_SERVEASYUY2, IDC_SERVEASRGB24 + serveFormat);
+    CheckRadioButton(dlg, IDC_SERVEASRGB24, IDC_SERVEASV210, IDC_SERVEASRGB24 + serveFormat);
     CheckDlgButton(dlg, IDC_NETSERVE, networkServing);
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
     EnableWindow(GetDlgItem(dlg, IDC_NETPORT), networkServing);
@@ -274,6 +275,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       serveFormat = sfRGB24;
       if (IsDlgButtonChecked(dlg, IDC_SERVEASRGB32)) serveFormat = sfRGB32;
       if (IsDlgButtonChecked(dlg, IDC_SERVEASYUY2)) serveFormat = sfYUY2;
+      if (IsDlgButtonChecked(dlg, IDC_SERVEASV210)) serveFormat = sfV210;
       networkServing = IsDlgButtonChecked(dlg, IDC_NETSERVE);
       networkPort = GetDlgItemInt(dlg, IDC_NETPORT, NULL, FALSE);
       saveAsImageSequence = IsDlgButtonChecked(dlg, IDC_OUTPUTIMAGESEQUENCE);
@@ -323,7 +325,7 @@ DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   case WM_INITDIALOG:
     SetFsIconForWindow(dlg);
     CheckDlgButton(dlg, IDC_PCMAUDIOINAVI, pcmAudioInAvi);
-    CheckRadioButton(dlg, IDC_SERVEASRGB24, IDC_SERVEASYUY2, IDC_SERVEASRGB24 + serveFormat);
+    CheckRadioButton(dlg, IDC_SERVEASRGB24, IDC_SERVEASV210, IDC_SERVEASRGB24 + serveFormat);
     CheckDlgButton(dlg, IDC_NETSERVE, networkServing);
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
     break;
@@ -436,6 +438,8 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
         }
       }
       vars->videoBytesRead = vars->encBi.biWidth * vars->encBi.biHeight * 2;
+    } else {
+      OutputDebugString(L"Unexpected inDataFormat for sfYUY2");
     }
   } else if (serveFormat == sfRGB24) {
     if (inDataFormat == idfRGB32) {
@@ -466,6 +470,8 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
       }
       vars->videoBytesRead = dstRowBytes * vars->encBi.biHeight;
 #endif
+    } else {
+      OutputDebugString(L"Unexpected inDataFormat for sfRGB24");
     }
   } else if (serveFormat == sfRGB32) {
     if (inDataFormat == idfRGB32) {
@@ -480,6 +486,17 @@ void ConvertVideoFrame(LPCVOID pFrame, int rowBytes, DfscData* vars, int inDataF
       for (int i = 0; i < vars->encBi.biHeight; i++, dst += dstRowBytes, src += srcRowBytes)
         memcpy(dst, src, dstRowBytes);
 #endif
+    } else {
+      OutputDebugString(L"Unexpected inDataFormat for sfRGB32");
+    }
+  } else if (serveFormat == sfV210) {
+    if (inDataFormat == idfV210) {
+      vars->videoBytesRead = rowBytes * vars->encBi.biHeight;
+      BYTE* src = (LPBYTE)pFrame;
+      BYTE* dst = ((LPBYTE)vars) + vars->videooffset;
+      memcpy(dst, src, vars->videoBytesRead);
+    } else {
+      OutputDebugString(L"Unexpected inDataFormat for sfV210");
     }
   }
 }
@@ -623,6 +640,12 @@ bool FrameServerImpl::Run() {
     vars->wfx = wfx;
 
     bool filecreated = false;
+    DWORD fourccs[] = {
+      /* sfRGB24 */ BI_RGB,
+      /* sfRGB32 */ BI_RGB,
+      /* sfYUY2 */ mmioFOURCC('Y', 'U', 'Y', '2'),
+      /* sfV210 */ mmioFOURCC('v', '2', '1', '0')
+    };
     if (IsAudioCompatible(wfx.wBitsPerSample, wfx.nSamplesPerSec)) {
       if (pcmAudioInAvi) {
         wfx.wFormatTag = WAVE_FORMAT_PCM;
@@ -631,7 +654,7 @@ bool FrameServerImpl::Run() {
         wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
         filecreated = CreateBlankAviPcmAudio(nfvideo, (int)(fps * 1000),
             1000, width, height, vars->encBi.biBitCount,
-            filename, mmioFOURCC('D', 'F', 'S', 'C'),
+            filename, mmioFOURCC('D', 'F', 'S', 'C'), fourccs[serveFormat],
             (ULONG)(((double)nfaudio * wfx.nSamplesPerSec) / 100), &wfx, stream,
             BlankAviReadAudioSamples, this);
       } else {
@@ -641,7 +664,8 @@ bool FrameServerImpl::Run() {
         wfx.wBitsPerSample = 0;
         filecreated = CreateBlankAvi(nfvideo, (int)(fps * 1000),
             1000, width, height, vars->encBi.biBitCount,
-            filename, mmioFOURCC('D', 'F', 'S', 'C'), nfaudio, &wfx, stream);
+            filename, mmioFOURCC('D', 'F', 'S', 'C'), fourccs[serveFormat],
+            nfaudio, &wfx, stream);
       }
     }
     if (!filecreated) {

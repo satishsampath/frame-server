@@ -128,7 +128,7 @@ void DestroyAdec(DfscAdec* adec) {
 int CreateAdec(DfscAdec* adec, DWORD stream) {
   char str[64] = "DfscData";
 
-  _ultoa_s(stream, str + strlen(str), 64, 10);
+  _ultoa_s(stream, str + strlen(str), _countof(str) - strlen(str), 10);
   ZeroMemory(adec, sizeof(DfscAdec));
 
   adec->varFile = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DfscData), "DfscNetData");

@@ -33,7 +33,7 @@ bool IsAudioCompatible(int bitsPerSample, int samplingRate) {
 }
 
 bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale,
-    int width, int height, int videobpp, TCHAR* filename, DWORD fcc,
+    int width, int height, int videobpp, TCHAR* filename, DWORD containerFcc, DWORD realFcc,
     unsigned long numsamples, WAVEFORMATEX* wfx,
     unsigned long stream, fxnReadAudioSamples readSamples, void* readData) {
   WIN32_FIND_DATA fd;
@@ -82,7 +82,7 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
   videostrh.ckid = mmioFOURCC('s', 't', 'r', 'h');
   mmioCreateChunk(file, &videostrh, 0);
 
-  AVISTREAMHEADER videohdr = { 0, 0, streamtypeVIDEO, fcc, 0, 0, 0, 0, frratescale, frrate,
+  AVISTREAMHEADER videohdr = { 0, 0, streamtypeVIDEO, containerFcc, 0, 0, 0, 0, frratescale, frrate,
                                0, numframes, (width * height * videobpp) / 8, 0, 0 };
   mmioWrite(file, (LPCSTR)&videohdr + 8, sizeof(videohdr) - 8);
 
@@ -93,9 +93,14 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
   videostrf.ckid = mmioFOURCC('s', 't', 'r', 'f');
   mmioCreateChunk(file, &videostrf, 0);
 
+  // containerFcc is set in the biCompression field so that our frameserver codec gets invoked to read
+  // the data.
+  // realFcc is the actual fourcc of the bitmap such as BI_RGB, YUY2 or v210. We pass that in to the codec
+  // via the biClrImportant field which is otherwise unused in this flow. The decoder, dfsc.cpp, will make
+  // use of it.
   BITMAPINFOHEADER videofmt = {
-    sizeof(BITMAPINFOHEADER), width, height, 1, videobpp, fcc, (width * height * videobpp) / 8,
-    0, 0, 0
+    sizeof(BITMAPINFOHEADER), width, height, 1, videobpp, containerFcc, (width * height * videobpp) / 8,
+    0, 0, 0, realFcc
   };
   mmioWrite(file, (LPCSTR)&videofmt, sizeof(videofmt));
 
@@ -207,7 +212,7 @@ bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale
 }
 
 bool CreateBlankAvi(unsigned long numframes, int frrate, int frratescale,
-    int width, int height, int videobpp, TCHAR* filename, DWORD fcc,
+    int width, int height, int videobpp, TCHAR* filename, DWORD containerFcc, DWORD realFcc,
     unsigned long numaudioblocks, WAVEFORMATEX* wfx,
     unsigned long stream) {
   WIN32_FIND_DATA fd;
@@ -253,7 +258,7 @@ bool CreateBlankAvi(unsigned long numframes, int frrate, int frratescale,
   videostrh.ckid = mmioFOURCC('s', 't', 'r', 'h');
   mmioCreateChunk(file, &videostrh, 0);
 
-  AVISTREAMHEADER videohdr = { 0, 0, streamtypeVIDEO, fcc, 0, 0, 0, 0, frratescale, frrate,
+  AVISTREAMHEADER videohdr = { 0, 0, streamtypeVIDEO, containerFcc, 0, 0, 0, 0, frratescale, frrate,
                                0, numframes, (width * height * videobpp) / 8, 0, 0 };
   mmioWrite(file, (LPCSTR)&videohdr + 8, sizeof(videohdr) - 8);
 
@@ -264,9 +269,14 @@ bool CreateBlankAvi(unsigned long numframes, int frrate, int frratescale,
   videostrf.ckid = mmioFOURCC('s', 't', 'r', 'f');
   mmioCreateChunk(file, &videostrf, 0);
 
+  // containerFcc is set in the biCompression field so that our frameserver codec gets invoked to read
+  // the data.
+  // realFcc is the actual fourcc of the bitmap such as BI_RGB, YUY2 or v210. We pass that in to the codec
+  // via the biClrImportant field which is otherwise unused in this flow. The decoder, dfsc.cpp, will make
+  // use of it.
   BITMAPINFOHEADER videofmt = {
-    sizeof(BITMAPINFOHEADER), width, height, 1, videobpp, fcc, (width * height * videobpp) / 8,
-    0, 0, 0, 0
+    sizeof(BITMAPINFOHEADER), width, height, 1, videobpp, containerFcc, (width * height * videobpp) / 8,
+    0, 0, 0, realFcc
   };
   mmioWrite(file, (LPCSTR)&videofmt, sizeof(videofmt));
 

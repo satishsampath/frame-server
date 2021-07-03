@@ -356,31 +356,36 @@ DWORD DfscInstance::DecompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADE
     return ICERR_BADFORMAT;
 
   if (lpbiOut) {
-    char st[32];
-    int outHeight = lpbiOut->biHeight;
-    bool isYUY2 = (lpbiIn->biBitCount == 16);
-    DWORD inComp = BI_RGB;
+    // The frameserver passes in the "real" fourcc code in biClrImportant (because biCompression is set
+    // to the frameserver's fourcc, necessary for windows to call our codec).
+    DWORD realFcc = lpbiIn->biClrImportant;
+    char st[128];
+    sprintf_s(st, _countof(st), "DecompressQuery 0x%X - 0x%X\n", realFcc, lpbiOut->biCompression);
+    OutputDebugStringA(st);
+    sprintf_s(st, _countof(st), "DecompressQuery 0x%X - 0x%X\n", lpbiIn->biBitCount, lpbiOut->biBitCount);
+    OutputDebugStringA(st);
+    sprintf_s(st, _countof(st), "DecompressQuery 0x%X - 0x%X\n", lpbiIn->biHeight, lpbiOut->biHeight);
+    OutputDebugStringA(st);
+    sprintf_s(st, _countof(st), "DecompressQuery 0x%X - 0x%X\n", lpbiIn->biWidth, lpbiOut->biWidth);
+    OutputDebugStringA(st);
+    sprintf_s(st, _countof(st), "DecompressQuery 0x%X - 0x%X\n", lpbiIn->biPlanes, lpbiOut->biPlanes);
+    OutputDebugStringA(st);
+
     WORD inBitCount = lpbiIn->biBitCount;
-    if (isYUY2) {
+    int outHeight = lpbiOut->biHeight;
+    if (realFcc == MAKEFOURCC('Y', 'U', 'Y', '2') || realFcc == MAKEFOURCC('v', '2', '1', '0')) {
       outHeight = abs(outHeight);
-      inComp = MAKEFOURCC('Y', 'U', 'Y', '2');
       inBitCount = lpbiOut->biBitCount;
     }
     if (inBitCount != lpbiOut->biBitCount ||
-        inComp != lpbiOut->biCompression ||
+        realFcc != lpbiOut->biCompression ||
         lpbiIn->biHeight != outHeight ||
         lpbiIn->biWidth != lpbiOut->biWidth ||
         lpbiIn->biPlanes != lpbiOut->biPlanes) {
-      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biBitCount, lpbiOut->biBitCount);
-      OutputDebugStringA(st);
-      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biHeight, lpbiOut->biHeight);
-      OutputDebugStringA(st);
-      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biWidth, lpbiOut->biWidth);
-      OutputDebugStringA(st);
-      sprintf_s(st, _countof(st), "0x%X - 0x%X\n", lpbiIn->biPlanes, lpbiOut->biPlanes);
-      OutputDebugStringA(st);
+      OutputDebugStringA("DecompressQuery returning ICERR_BADFORMAT");
       return ICERR_BADFORMAT;
     }
+    OutputDebugStringA("DecompressQuery returning ICERR_OK");
   }
   return ICERR_OK;
 }
@@ -392,39 +397,66 @@ DWORD DfscInstance::DecompressGetFormat(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOH
   *lpbiOut = *lpbiIn;
   lpbiOut->biSize = sizeof(BITMAPINFOHEADER);
   lpbiOut->biPlanes = 1;
-  lpbiOut->biSizeImage = lpbiIn->biWidth * abs(lpbiIn->biHeight) * (lpbiIn->biBitCount / 8);
-  lpbiOut->biCompression = BI_RGB;
-  if (lpbiIn->biBitCount == 16) {
-    lpbiOut->biCompression = MAKEFOURCC('Y', 'U', 'Y', '2');
-    lpbiOut->biBitCount = 32;
-    lpbiOut->biSizeImage /= 2;
+
+  // The frameserver passes in the "real" fourcc code in biClrImportant (because biCompression is set
+  // to the frameserver's fourcc, necessary for windows to call our codec).
+  DWORD realFcc = lpbiIn->biClrImportant;
+  lpbiOut->biCompression = realFcc;
+
+  char st[128];
+  sprintf_s(st, _countof(st), "DeCompressGetFormat 0x%X\n", realFcc);
+  OutputDebugStringA(st);
+
+  if (realFcc == BI_RGB || realFcc == MAKEFOURCC('Y', 'U', 'Y', '2')) {
+    lpbiOut->biSizeImage = lpbiIn->biWidth * abs(lpbiIn->biHeight) * (lpbiIn->biBitCount / 8);
+    if (realFcc == MAKEFOURCC('Y', 'U', 'Y', '2')) {
+      lpbiOut->biBitCount = 32;
+      lpbiOut->biSizeImage /= 2;
+    }
+  } else if (realFcc == MAKEFOURCC('v', '2', '1', '0')) {
+    // lpbiIn already has all the correct details for v210, so it would've been copied to lpbiOut above.
   }
 
   return ICERR_OK;
 }
 
 DWORD DfscInstance::DecompressBegin(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
-  int outHeight = lpbiOut->biHeight;
-  bool isYUY2 = (lpbiIn->biBitCount == 16);
-  DWORD inComp = BI_RGB;
-  WORD inBitCount = lpbiIn->biBitCount;
+  // The frameserver passes in the "real" fourcc code in biClrImportant (because biCompression is set
+  // to the frameserver's fourcc, necessary for windows to call our codec).
+  DWORD realFcc = lpbiIn->biClrImportant;
 
-  if (isYUY2) {
+  char st[128];
+  sprintf_s(st, _countof(st), "DecompressBegin 0x%X - 0x%X\n", realFcc, lpbiOut->biCompression);
+  OutputDebugStringA(st);
+  sprintf_s(st, _countof(st), "DecompressBegin 0x%X - 0x%X\n", lpbiIn->biBitCount, lpbiOut->biBitCount);
+  OutputDebugStringA(st);
+  sprintf_s(st, _countof(st), "DecompressBegin 0x%X - 0x%X\n", lpbiIn->biHeight, lpbiOut->biHeight);
+  OutputDebugStringA(st);
+  sprintf_s(st, _countof(st), "DecompressBegin 0x%X - 0x%X\n", lpbiIn->biWidth, lpbiOut->biWidth);
+  OutputDebugStringA(st);
+  sprintf_s(st, _countof(st), "DecompressBegin 0x%X - 0x%X\n", lpbiIn->biPlanes, lpbiOut->biPlanes);
+  OutputDebugStringA(st);
+
+  WORD inBitCount = lpbiIn->biBitCount;
+  int outHeight = lpbiOut->biHeight;
+  if (realFcc == MAKEFOURCC('Y', 'U', 'Y', '2') || realFcc == MAKEFOURCC('v', '2', '1', '0')) {
     outHeight = abs(outHeight);
-    inComp = MAKEFOURCC('Y', 'U', 'Y', '2');
     inBitCount = lpbiOut->biBitCount;
   }
+
   if (inBitCount != lpbiOut->biBitCount ||
-      inComp != lpbiOut->biCompression ||
+      realFcc != lpbiOut->biCompression ||
       lpbiIn->biHeight != outHeight ||
       lpbiIn->biWidth != lpbiOut->biWidth ||
       lpbiIn->biPlanes != lpbiOut->biPlanes) {
+    OutputDebugStringA("DecompressBegin returning ICERR_BADFORMAT");
     return ICERR_BADFORMAT;
   }
-  DecompressEnd();
+  DecompressEnd();  // Close out any previous sessions before we start.
 
   decompressing = true;
 
+  OutputDebugStringA("DecompressBegin returning ICERR_OK");
   return ICERR_OK;
 }
 
@@ -477,13 +509,13 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
 
       vars->videoFrameIndex = ((DWORD*)icinfo->lpInput)[0];
       SetEvent(videoEncEvent);
-      // OutputDebugString("Waiting for video...");
+      // OutputDebugStringA("Waiting for video...");
 
       if (WaitForSingleObject(videoDecEvent, INFINITE) != WAIT_OBJECT_0)
         return ICERR_OK;            // some error.
       if (vars->encStatus == 1)         // encoder closed
         return ICERR_ABORT;
-      // OutputDebugString("got video...");
+      // OutputDebugStringA("got video...");
       fast_memcpy(icinfo->lpOutput, ((LPBYTE)vars) + vars->videooffset, vars->videoBytesRead);
     }
     ReleaseSemaphore(videoEncSem, 1, NULL);

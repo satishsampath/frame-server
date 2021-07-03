@@ -26,12 +26,14 @@ typedef bool (*fxnReadAudioSamples)(unsigned long frame, void* readData,
                                     unsigned char** data, unsigned long* datalen);
 
 bool CreateBlankAviPcmAudio(unsigned long numframes, int frrate, int frratescale,
-                            int width, int height, int videobpp, TCHAR* filename, DWORD fcc,
+                            int width, int height, int videobpp, TCHAR* filename,
+                            DWORD containerFcc, DWORD realFcc,
                             unsigned long numsamples, WAVEFORMATEX* wfx,
                             unsigned long stream, fxnReadAudioSamples readSamples, void* readData);
 
 bool CreateBlankAvi(unsigned long numframes, int frrate, int frratescale,
-                    int width, int height, int videobpp, TCHAR* filename, DWORD fcc,
+                    int width, int height, int videobpp, TCHAR* filename,
+                    DWORD containerFcc, DWORD realFcc,
                     unsigned long numaudioblocks, WAVEFORMATEX* wfx,
                     unsigned long stream);
 

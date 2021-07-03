@@ -41,12 +41,14 @@
 enum {
   sfRGB24 = 0,
   sfRGB32,
-  sfYUY2
+  sfYUY2,
+  sfV210,
 };
 
 enum {
   idfRGB32 = 0,
-  idfAYUV
+  idfAYUV,
+  idfV210,
 };
 
 extern BOOL pcmAudioInAvi, networkServing;

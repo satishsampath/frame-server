@@ -78,7 +78,7 @@ private:
   csSDK_uint32 audioRenderId;
   exDoExportRec* exportRec;
   PrTime ticksPerFrame;
-  PrPixelFormat pixelFormat[2];
+  PrPixelFormat pixelFormat[3][2];
   SequenceRender_ParamsRec renderParams;
   float* audioFloatData[2];
   unsigned long audioFloatDataPos;
@@ -102,8 +102,12 @@ PremiereFSImpl::PremiereFSImpl(SPBasicSuite* bs) {
       const_cast<const void**>(reinterpret_cast<void**>(&ppixSuite)));
   basicSuite->AcquireSuite(kPrSDKMemoryManagerSuite, kPrSDKMemoryManagerSuiteVersion,
       const_cast<const void**>(reinterpret_cast<void**>(&memorySuite)));
-  pixelFormat[0] = PrPixelFormat_VUYA_4444_8u;
-  pixelFormat[1] = PrPixelFormat_BGRA_4444_8u;
+  pixelFormat[0][1] = PrPixelFormat_BGRA_4444_8u;
+  pixelFormat[0][1] = PrPixelFormat_BGRA_4444_8u;
+  pixelFormat[1][0] = PrPixelFormat_VUYA_4444_8u;
+  pixelFormat[1][1] = PrPixelFormat_BGRA_4444_8u;
+  pixelFormat[2][0] = PrPixelFormat_V210_422_10u_601;
+  pixelFormat[2][1] = PrPixelFormat_BGRA_4444_8u;
 }
 
 PremiereFSImpl::~PremiereFSImpl() {
@@ -273,8 +277,14 @@ prMALError PremiereFSImpl::serve(exDoExportRec* rec) {
 void PremiereFSImpl::OnVideoRequest() {
   // This is done here since the selection of YUY2 or RGBA happens in the frameserver dialog
   // after Run() is called above.
-  renderParams.inRequestedPixelFormatArrayCount = (serveFormat == sfYUY2) ? 2 : 1;
-  renderParams.inRequestedPixelFormatArray = pixelFormat + ((serveFormat == sfYUY2) ? 0 : 1);
+  renderParams.inRequestedPixelFormatArrayCount = 1;
+  renderParams.inRequestedPixelFormatArray = &pixelFormat[0][0];
+  if (serveFormat == sfV210) {
+    renderParams.inRequestedPixelFormatArray = &pixelFormat[2][0];
+  } else if (serveFormat == sfYUY2) {
+    renderParams.inRequestedPixelFormatArrayCount = 2;
+    renderParams.inRequestedPixelFormatArray = &pixelFormat[1][0];
+  }
 
   SequenceRender_GetFrameReturnRec renderResult;
   int result = renderSuite->RenderVideoFrame(videoRenderId,
@@ -287,7 +297,12 @@ void PremiereFSImpl::OnVideoRequest() {
     ppixSuite->GetPixelFormat(renderResult.outFrame, &format);
     ppixSuite->GetRowBytes(renderResult.outFrame, &rowBytes);
     ppixSuite->GetPixels(renderResult.outFrame, PrPPixBufferAccess_ReadOnly, &pixels);
-    ConvertVideoFrame(pixels, rowBytes, vars, (format == PrPixelFormat_VUYA_4444_8u) ? idfAYUV : idfRGB32);
+    TCHAR st[128];
+    _stprintf_s(st, _countof(st), _T("premiere pixelformat = 0x%X"), format);
+    OutputDebugString(st);
+    ConvertVideoFrame(pixels, rowBytes, vars, 
+      ((format == PrPixelFormat_VUYA_4444_8u) ? idfAYUV : 
+        ((format == PrPixelFormat_V210_422_10u_601) ? idfV210 : idfRGB32)));
     ppixSuite->Dispose(renderResult.outFrame);
   } else {
     vars->videoBytesRead = vars->encBi.biWidth * vars->encBi.biHeight * vars->encBi.biBitCount / 8;
