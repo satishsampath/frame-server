@@ -42,7 +42,7 @@ UINT imageSequenceFormat = ImageSequenceFormatPNG;
 
 BOOL pcmAudioInAvi = FALSE, networkServing = FALSE;
 UINT networkPort = 8278, serveFormat = sfRGB24;
-BOOL stopServing = FALSE;
+BOOL stopServing = FALSE, pauseServing = FALSE;
 HWND appwnd;
 TCHAR installDir[MAX_PATH] = _T("C:\\Program Files\\Debugmode\\Frameserver");
 extern HINSTANCE ghInst;
@@ -337,10 +337,19 @@ DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
     break;
   case WM_COMMAND:
-    if (LOWORD(wp) == IDCANCEL)
+    if (LOWORD(wp) == IDCANCEL) {
       stopServing = TRUE;
-    if (LOWORD(wp) == IDC_ABOUT)
+    } else if (LOWORD(wp) == IDC_PAUSE) {
+      pauseServing = TRUE;
+      ShowWindow(GetDlgItem(dlg, IDC_PAUSE), SW_HIDE);
+      ShowWindow(GetDlgItem(dlg, IDC_RESUME), SW_SHOW);
+    } else if (LOWORD(wp) == IDC_RESUME) {
+      pauseServing = FALSE;
+      ShowWindow(GetDlgItem(dlg, IDC_RESUME), SW_HIDE);
+      ShowWindow(GetDlgItem(dlg, IDC_PAUSE), SW_SHOW);
+    } else if (LOWORD(wp) == IDC_ABOUT) {
       DialogBox(ghResInst, MAKEINTRESOURCE(IDD_DFABOUTDLG), dlg, AboutDlgProc);
+    }
     break;
   case WM_SIZE:
     if (wp == SIZE_MINIMIZED) {
@@ -577,6 +586,7 @@ bool FrameServerImpl::Run() {
   if (!hasAudio)
     pcmAudioInAvi = FALSE;
   stopServing = FALSE;
+  pauseServing = FALSE;
   EnableWindow(parentWnd, FALSE);
   appwnd = parentWnd;
   servingdlg = CreateDialog(ghResInst, MAKEINTRESOURCE(IDD_WRITINGSIGNPOST), parentWnd, WritingSignpostDlgProc);
@@ -747,9 +757,11 @@ bool FrameServerImpl::Run() {
       // Regular frameserving
       HANDLE evs[10];
       int nevs = 0;
-      evs[nevs++] = videoEncEvent;
-      if (!pcmAudioInAvi)
-        evs[nevs++] = audioEncEvent;
+      if (!pauseServing) {
+        evs[nevs++] = videoEncEvent;
+        if (!pcmAudioInAvi)
+          evs[nevs++] = audioEncEvent;
+      }
       if (imageSequenceThreadHandle)
         evs[nevs++] = imageSequenceThreadHandle;
 
@@ -765,45 +777,48 @@ bool FrameServerImpl::Run() {
           WaitForSingleObject(imageSequenceThreadHandle, 0) == WAIT_OBJECT_0) {
         stopServing = true;
       }
-      if (WaitForSingleObject(videoEncEvent, 0) == WAIT_OBJECT_0) {
-        ResetEvent(videoEncEvent);
+      if (!pauseServing) {
+        if (WaitForSingleObject(videoEncEvent, 0) == WAIT_OBJECT_0) {
+          ResetEvent(videoEncEvent);
 #ifdef DEBUG
-        char str[32];
-        strcpy_s(str, _countof(str), "video - ");
-        _itoa_s(vars->videoFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
-        strcat_s(str, _countof(str), "\n");
-        OutputDebugStringA(str);
+          char str[32];
+          strcpy_s(str, _countof(str), "video - ");
+          _itoa_s(vars->videoFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
+          strcat_s(str, _countof(str), "\n");
+          OutputDebugStringA(str);
 #endif
-        if (vars->videoFrameIndex < nfvideo)
-          OnVideoRequest();
-        else
-          vars->videoBytesRead = 0;
+          if (vars->videoFrameIndex < nfvideo)
+            OnVideoRequest();
+          else
+            vars->videoBytesRead = 0;
 
-        SetEvent(videoDecEvent);
-        framesread++;
-      }
-      if ((!pcmAudioInAvi) && (WaitForSingleObject(audioEncEvent, 0) == WAIT_OBJECT_0)) {
-        ResetEvent(audioEncEvent);
-#ifdef DEBUG
-        char str[32];
-        strcpy_s(str, _countof(str), "audio - ");
-        _itoa_s(vars->audioFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
-        strcat_s(str, _countof(str), "\n");
-        OutputDebugStringA(str);
-#endif
-        vars->audioBytesRead = 0;
-        if (vars->audioRequestFullSecond) {
-          LPBYTE data = (LPBYTE)vars + vars->audiooffset;
-          if (vars->audioFrameIndex * 100 < nfaudio)
-            OnAudioRequestOneSecond(vars->audioFrameIndex, &data, &vars->audioBytesRead);
-        } else {
-          if (vars->audioFrameIndex < nfaudio)
-            OnAudioRequest();
+          SetEvent(videoDecEvent);
+          framesread++;
         }
-        vars->audioRequestFullSecond = FALSE;
+        if ((!pcmAudioInAvi) && (WaitForSingleObject(audioEncEvent, 0) == WAIT_OBJECT_0)) {
+          ResetEvent(audioEncEvent);
+#ifdef DEBUG
+          char str[32];
+          strcpy_s(str, _countof(str), "audio - ");
+          _itoa_s(vars->audioFrameIndex, str + strlen(str), _countof(str) - strlen(str), 10);
+          strcat_s(str, _countof(str), "\n");
+          OutputDebugStringA(str);
+#endif
+          vars->audioBytesRead = 0;
+          if (vars->audioRequestFullSecond) {
+            LPBYTE data = (LPBYTE)vars + vars->audiooffset;
+            if (vars->audioFrameIndex * 100 < nfaudio)
+              OnAudioRequestOneSecond(vars->audioFrameIndex, &data, &vars->audioBytesRead);
+          }
+          else {
+            if (vars->audioFrameIndex < nfaudio)
+              OnAudioRequest();
+          }
+          vars->audioRequestFullSecond = FALSE;
 
-        SetEvent(audioDecEvent);
-        samplesread += audioSamplingRate / 100;
+          SetEvent(audioDecEvent);
+          samplesread += audioSamplingRate / 100;
+        }
       }
     }
 

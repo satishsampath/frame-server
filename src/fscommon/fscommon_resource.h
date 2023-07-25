@@ -46,6 +46,8 @@
 #define IDC_SERVEASYUY2                 1402
 #define IDC_SERVEASV210                 1403
 #define IDS_ABOUTDLG_COPYRIGHT          1404
+#define IDC_PAUSE                       1405
+#define IDC_RESUME                      1406
 
 // Next default values for new objects
 // 
