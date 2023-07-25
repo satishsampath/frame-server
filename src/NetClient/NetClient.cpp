@@ -40,13 +40,14 @@ BOOL stopServing = FALSE;
 HWND servingdlg;
 TCHAR installDir[MAX_PATH] = _T("C:\\Program Files\\Debugmode\\Frameserver");
 #define APPNAME _T("Debugmode FrameServer")
+#define REGISTRY_FOLDER _T("Software\\DebugMode\\FrameServer")
 
 // ------------------------------- copied from fscommon.cpp ----------------------------------
 
 bool LoadCommonResource() {
   HKEY key;
 
-  RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\DebugMode\\FrameServer"), 0, 0,
+  RegCreateKeyEx(HKEY_LOCAL_MACHINE, REGISTRY_FOLDER, 0, 0,
       REG_OPTION_NON_VOLATILE, KEY_READ, 0, &key, 0);
   if (key) {
     DWORD size = sizeof(installDir);
@@ -97,13 +98,20 @@ INT_PTR CALLBACK WritingSignpostDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp
 }
 
 INT_PTR CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
-  TCHAR copyright[1024];
-
   switch (msg) {
-  case WM_INITDIALOG: LoadString(ghResInst, IDS_ABOUTDLG_COPYRIGHT, copyright, 1024);
-    ::SetDlgItemText(dlg, IDC_WARNING, copyright);
-    SetFsIconForWindow(dlg);
-    return TRUE;
+  case WM_INITDIALOG:
+    {
+      HRSRC rc = ::FindResource(ghResInst, MAKEINTRESOURCE(IDS_ABOUTDLG_COPYRIGHT), MAKEINTRESOURCE(TEXTFILE));
+      DWORD size = ::SizeofResource(ghResInst, rc);
+      HGLOBAL rcData = ::LoadResource(ghResInst, rc);
+      char* str = new char[size + 1];
+      memcpy(str, static_cast<const char*>(::LockResource(rcData)), size);
+      str[size] = 0;
+      ::SetDlgItemTextA(dlg, IDC_WARNING, str);
+      delete[] str;
+      SetFsIconForWindow(dlg);
+      return TRUE;
+    }
   case WM_COMMAND:
     if (LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL)
       EndDialog(dlg, 0);
@@ -172,7 +180,7 @@ INT_PTR CALLBACK NetClientOptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM l
     signpostPath[0] = 0;
     SHGetSpecialFolderPath(NULL, signpostPath, CSIDL_DESKTOPDIRECTORY, FALSE);
     _tcscat_s(signpostPath, _countof(signpostPath), _T("\\netserved.avi"));
-    RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0,
+    RegCreateKeyEx(HKEY_CURRENT_USER, REGISTRY_FOLDER, 0, 0,
         REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &key, 0);
     if (key) {
       DWORD size = sizeof(networkServer);
@@ -300,7 +308,7 @@ INT_PTR CALLBACK NetClientOptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM l
         }
       }
       if (sock) {
-        RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0, REG_OPTION_NON_VOLATILE,
+        RegCreateKeyEx(HKEY_CURRENT_USER, REGISTRY_FOLDER, 0, 0, REG_OPTION_NON_VOLATILE,
             KEY_ALL_ACCESS, 0, &key, 0);
         if (key) {
           DWORD size = sizeof(networkServer);

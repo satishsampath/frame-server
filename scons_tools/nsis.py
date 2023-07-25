@@ -53,7 +53,7 @@ def nsis_parse( sources, keyword, multiple ):
   """
   stuff = []
   for s in sources:
-    c = s.get_contents()
+    c = s.get_text_contents()
     for l in c.split('\n'):
       semi = l.find(';')
       if (semi != -1):
@@ -87,7 +87,7 @@ def nsis_path( filename, nsisdefines, rootdir ):
   while varPos != -1:
     endpos = filename.find('}',varPos)
     assert endpos != -1
-    if not nsisdefines.has_key(filename[varPos+2:endpos]):
+    if not filename[varPos+2:endpos] in nsisdefines:
       raise KeyError ("Could not find %s in NSISDEFINES" % filename[varPos+2:endpos])
     val = nsisdefines[filename[varPos+2:endpos]]
     if type(val) == list:
@@ -158,11 +158,11 @@ def toString(item,env):
 
 def runNSIS(source,target,env,for_signature):
   ret = env['NSIS']+" "
-  if env.has_key('NSISFLAGS'):
+  if 'NSISFLAGS' in env:
     for flag in env['NSISFLAGS']:
       ret += flag
       ret += ' '
-  if env.has_key('NSISDEFINES'):
+  if 'NSISDEFINES' in env:
     for d in env['NSISDEFINES']:
       ret += '/D'+d
       if env['NSISDEFINES'][d]:
@@ -181,7 +181,7 @@ def generate(env):
                                  emitter=nsis_emitter)
   env.Append(SCANNERS = SCons.Scanner.Scanner( function = nsis_scanner,
              skeys = ['.nsi']))
-  if not env.has_key('NSISDEFINES'):
+  if not 'NSISDEFINES' in env:
     env['NSISDEFINES'] = {}
   env['NSIS'] = find_nsis(env)
 

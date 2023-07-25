@@ -2,6 +2,15 @@
 // Microsoft Developer Studio generated include file.
 // Used by fscommon.rc
 //
+
+#ifndef SS_REALSIZECONTROL
+#define SS_REALSIZECONTROL  0x00000040L
+#endif
+
+// Resource type of the license text
+#define TEXTFILE        256
+
+// Usual resource id definitions
 #define IDD_NETCLIENT_OPTIONS           101
 #define IDI_FRAMESERVER                 101
 #define IDD_SERVING                     102
@@ -36,7 +45,7 @@
 #define IDC_SERVEASRGB32                1401
 #define IDC_SERVEASYUY2                 1402
 #define IDC_SERVEASV210                 1403
-#define IDS_ABOUTDLG_COPYRIGHT          59230
+#define IDS_ABOUTDLG_COPYRIGHT          1404
 
 // Next default values for new objects
 // 

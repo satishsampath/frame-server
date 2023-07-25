@@ -31,6 +31,7 @@
 #include "ImageSequence.h"
 
 #define APPNAME _T("Debugmode FrameServer")
+#define REGISTRY_FOLDER _T("Software\\Debugmode\\FrameServer")
 #ifndef BIF_NEWDIALOGSTYLE
     #define BIF_NEWDIALOGSTYLE 0x0040
 #endif
@@ -100,13 +101,19 @@ DWORD WINAPI ImageSequenceExportThreadProc(LPVOID param) {
 }
 
 DLGPROCRET CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
-  TCHAR copyright[1024];
-
   switch (msg) {
-  case WM_INITDIALOG: LoadString(ghResInst, IDS_ABOUTDLG_COPYRIGHT, copyright, 1024);
-    ::SetDlgItemText(dlg, IDC_WARNING, copyright);
-    SetFsIconForWindow(dlg);
-    return TRUE;
+  case WM_INITDIALOG: {
+      HRSRC rc = ::FindResource(ghResInst, MAKEINTRESOURCE(IDS_ABOUTDLG_COPYRIGHT), MAKEINTRESOURCE(TEXTFILE));
+      DWORD size = ::SizeofResource(ghResInst, rc);
+      HGLOBAL rcData = ::LoadResource(ghResInst, rc);
+      char* str = new char[size + 1];
+      memcpy(str, static_cast<const char*>(::LockResource(rcData)), size);
+      str[size] = 0;
+      ::SetDlgItemTextA(dlg, IDC_WARNING, str);
+      delete[] str;
+      SetFsIconForWindow(dlg);
+      return TRUE;
+    }
   case WM_COMMAND:
     if (LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL)
       EndDialog(dlg, 0);
@@ -143,7 +150,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
   case WM_INITDIALOG: {
     SetFsIconForWindow(dlg);
     HKEY key = 0;
-    RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0,
+    RegCreateKeyEx(HKEY_CURRENT_USER, REGISTRY_FOLDER, 0, 0,
         REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &key, 0);
     if (key) {
       DWORD size = sizeof(pcmAudioInAvi);
@@ -283,7 +290,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       imageSequenceFormat = (UINT)SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
 
       HKEY key = 0;
-      RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\DebugMode\\FrameServer"), 0, 0, REG_OPTION_NON_VOLATILE,
+      RegCreateKeyEx(HKEY_CURRENT_USER, REGISTRY_FOLDER, 0, 0, REG_OPTION_NON_VOLATILE,
           KEY_ALL_ACCESS, 0, &key, 0);
       if (key) {
         RegSetValueEx(key, _T("pcmAudioInAvi"), 0, REG_DWORD, (LPBYTE)&pcmAudioInAvi, sizeof(pcmAudioInAvi));
@@ -521,7 +528,7 @@ void FrameServerImpl::Init(bool _hasAudio, DWORD _audioSamplingRate, DWORD _audi
 bool LoadCommonResource() {
   HKEY key;
 
-  RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\DebugMode\\FrameServer"), 0, 0,
+  RegCreateKeyEx(HKEY_LOCAL_MACHINE, REGISTRY_FOLDER, 0, 0,
       REG_OPTION_NON_VOLATILE, KEY_READ, 0, &key, 0);
   if (key) {
     DWORD size = sizeof(installDir);
@@ -654,7 +661,7 @@ bool FrameServerImpl::Run() {
         wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
         filecreated = CreateBlankAviPcmAudio(nfvideo, (int)(fps * 1000),
             1000, width, height, vars->encBi.biBitCount,
-            filename, mmioFOURCC('D', 'F', 'S', 'C'), fourccs[serveFormat],
+            filename, FOURCC_DFSC, fourccs[serveFormat],
             (ULONG)(((double)nfaudio * wfx.nSamplesPerSec) / 100), &wfx, stream,
             BlankAviReadAudioSamples, this);
       } else {
@@ -664,7 +671,7 @@ bool FrameServerImpl::Run() {
         wfx.wBitsPerSample = 0;
         filecreated = CreateBlankAvi(nfvideo, (int)(fps * 1000),
             1000, width, height, vars->encBi.biBitCount,
-            filename, mmioFOURCC('D', 'F', 'S', 'C'), fourccs[serveFormat],
+            filename, FOURCC_DFSC, fourccs[serveFormat],
             nfaudio, &wfx, stream);
       }
     }

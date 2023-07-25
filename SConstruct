@@ -1,11 +1,11 @@
 import os
 
-if not os.environ.has_key('NSIS') or not os.path.exists(os.environ['NSIS']):
+if not 'NSIS' in os.environ or not os.path.exists(os.environ['NSIS']):
   print ('DebugMode Frameserver needs NSIS to create the installer package. Please set the environment variable "NSIS" to the path of "makensis.exe".')
   Exit(1)
 
 # Setup the environment for various versions of VC
-if not os.environ.has_key('VSCMD_ARG_TGT_ARCH') or os.environ['VSCMD_ARG_TGT_ARCH'] != 'x64':
+if not 'VSCMD_ARG_TGT_ARCH' in os.environ or os.environ['VSCMD_ARG_TGT_ARCH'] != 'x64':
   print('We need to build x86 and x64 targets. So, please run scons from Visual Studio\'s "x64 Native Tools Command Prompt" terminal.')
   Exit(1)
 
@@ -46,9 +46,9 @@ def SetupEnv(environ):
   # default ones that SCons has created. This allows each developer to have their
   # own install dir for each SDK and point them to the build with the environment
   # variables.
-  if os.environ.has_key('INCLUDE'):
+  if 'INCLUDE' in os.environ:
     environ['ENV']['INCLUDE'] = environ['ENV']['INCLUDE'].rstrip(';') + ';' + os.environ['INCLUDE']
-  if os.environ.has_key('LIB'):
+  if 'LIB' in os.environ:
     environ['ENV']['LIB'] = environ['ENV']['LIB'].rstrip(';') + ';' + os.environ['LIB']
 
   environ.AppendENVPath('PATH', os.path.join(program_files, 'Microsoft SDKs\\Windows\\v6.1\\Bin'))

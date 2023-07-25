@@ -176,9 +176,13 @@ Function preVegasFrom18DirPage
   SectionGetFlags ${secVegasFrom18Plug} $R0
   Call AbortIfSectionNotSelected
   IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 18.0\*.*" vegas180
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 19.0\*.*" vegas190
   Goto funcend
 vegas180:
   StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 18.0"
+  Goto funcend
+vegas190:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 19.0"
 funcend:
 FunctionEnd
 
