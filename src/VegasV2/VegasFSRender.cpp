@@ -303,6 +303,13 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
 }
 
 void VegasFSRender::OnVideoRequest() {
+#ifndef VEGAS_SDK_V3  // For versions up to v17, which don't support the v210 video format
+  if (serveFormat == sfV210) {
+    memset(((LPBYTE)vars) + vars->videooffset, 255, vars->videoBytesRead);
+    return;
+  }
+ #endif
+
   ISfReadVideoRenderStream* pIVideoStream = NULL;
   m_pReadStreams->GetFirstReadVideoRenderStream(&pIVideoStream, NULL);
 
