@@ -516,7 +516,13 @@ DWORD DfscInstance::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
       if (vars->encStatus == 1)         // encoder closed
         return ICERR_ABORT;
       // OutputDebugStringA("got video...");
+#if defined(_M_X64)
+      int rowBytes = vars->videoBytesRead / vars->encBi.biHeight;
+      mmx_CopyVideoFrame(((LPBYTE)vars) + vars->videooffset, icinfo->lpOutput, vars->encBi.biHeight,
+        rowBytes, rowBytes);
+#else
       fast_memcpy(icinfo->lpOutput, ((LPBYTE)vars) + vars->videooffset, vars->videoBytesRead);
+#endif
     }
     ReleaseSemaphore(videoEncSem, 1, NULL);
   }
