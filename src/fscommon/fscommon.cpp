@@ -195,7 +195,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (LOWORD(wp) == IDC_IMAGESEQUENCEBROWSE) {
       TCHAR filepath[MAX_PATH], filename[MAX_PATH];
-      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath, sizeof(filepath));
+      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath, _countof(filepath));
       filename[0] = 0;
       if (_tcsrchr(filepath, '\\') != NULL) {
         _tcscpy_s(filename, _countof(filename), _tcsrchr(filepath, '\\') + 1);
@@ -240,7 +240,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (LOWORD(wp) == IDC_IMAGESEQUENCEFORMAT && HIWORD(wp) == CBN_SELCHANGE) {
       TCHAR filepath[MAX_PATH];
-      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath, sizeof(filepath));
+      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, filepath, _countof(filepath));
       if (_tcsrchr(filepath, '.') != NULL)
         _tcsrchr(filepath, '.')[0] = 0;
 
@@ -268,7 +268,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       if (saveAsImageSequence) {
         // Check if the path and filenames are good enough
         TCHAR dstpath[MAX_PATH * 2];
-        GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, dstpath, sizeof(dstpath));
+        GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, dstpath, _countof(dstpath));
         if (!LoadImageSequenceModule())
           break;
         fxnCheckAndPreparePath CheckAndPreparePath = (fxnCheckAndPreparePath)
@@ -286,7 +286,7 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       networkServing = IsDlgButtonChecked(dlg, IDC_NETSERVE);
       networkPort = GetDlgItemInt(dlg, IDC_NETPORT, NULL, FALSE);
       saveAsImageSequence = IsDlgButtonChecked(dlg, IDC_OUTPUTIMAGESEQUENCE);
-      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath, sizeof(imageSequencePath));
+      GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath, _countof(imageSequencePath));
       imageSequenceFormat = (UINT)SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
 
       HKEY key = 0;
