@@ -6,6 +6,7 @@
 !include x64.nsh
 ;  !packhdr exehead.tmp 'upx.exe -9 exehead.tmp'
 
+RequestExecutionLevel admin
 Name "Debugmode FrameServer"
 OutFile "fssetup.exe"
 BrandingText " "
@@ -88,6 +89,7 @@ FunctionEnd
 ComponentText "Debugmode FrameServer comes with plug-ins for major video editing software listed below. Select which of these plug-ins you want to install."
 
 Section "Debugmode FrameServer Core (required)" secCore
+  SetShellVarContext all
   SectionIn 1 RO
   StrCpy $FsInstallDir "$0"
   SetOutPath "$0"
@@ -283,6 +285,7 @@ FunctionEnd
 UninstallText "This will uninstall Debugmode FrameServer from your system"
 
 Section Uninstall
+  SetShellVarContext all
   SetRegView 64 
   ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasPlug Path"
   ReadRegStr $R2 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path"
@@ -311,8 +314,7 @@ Section Uninstall
 ;  DeleteIniStr System.ini drivers32 msacm.dfscacm
 ;  DeleteIniStr Control.ini drivers.desc dfsc.dll
 ;  DeleteIniStr Control.ini drivers.desc dfscacm.dll
-  Delete "$SMPROGRAMS\Debugmode\FrameServer\*.*"
-  RMDir "$SMPROGRAMS\Debugmode\FrameServer"
+  RMDir /r /REBOOTOK "$SMPROGRAMS\Debugmode\FrameServer"
   ${DisableX64FSRedirection}
   Delete /REBOOTOK "$SYSDIR\dfsc.dll"
   Delete /REBOOTOK "$SYSDIR\dfscacm.dll"
