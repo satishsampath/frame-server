@@ -10,6 +10,7 @@ if not 'VSCMD_ARG_TGT_ARCH' in os.environ or os.environ['VSCMD_ARG_TGT_ARCH'] !=
   Exit(1)
 
 isdbg = True if int(ARGUMENTS.get('dbg', 0)) == 1 else False
+isdev = True if int(ARGUMENTS.get('dev', 0)) == 1 else False
 
 program_files = os.environ['ProgramFiles']
 if not program_files.endswith('\\'):
@@ -60,6 +61,11 @@ def SetupEnv(environ):
     linkflags = ['/DEBUG' , '/MANIFEST', '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'', '/SUBSYSTEM:WINDOWS', '/DYNAMICBASE' , '/NXCOMPAT', '/ERRORREPORT:PROMPT']
     cppdefines = ['_WINDOWS', 'UNICODE', '_UNICODE', '_DEBUG']
     rcflags = ['/l', '0x409', '/d', '_DEBUG']
+  elif isdev:
+    out_dir = 'build/dev'
+    ccflags = ['/MD', '/W3', '/Od', '/Fd', '/Gy', '/EHsc', '/Zi', '/errorReport:prompt']
+    linkflags = ['/DEBUG' , '/MANIFEST', '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'', '/SUBSYSTEM:WINDOWS', '/DYNAMICBASE' , '/NXCOMPAT',  '/ERRORREPORT:PROMPT']
+    cppdefines = ['_WINDOWS', 'UNICODE', '_UNICODE', 'NDEBUG']
   else:
     out_dir = 'build/opt'
     ccflags = ['/MD', '/W3', '/O2', '/Oi', '/GL', '/FD', '/Gy', '/EHsc', '/Zi', '/errorReport:prompt']
@@ -94,4 +100,9 @@ Export('env')
 Export('env32')
 
 # Build!
-env.SConscript('build/' + ('dbg' if isdbg else 'opt') + '/SConscript')
+if isdbg:
+  env.SConscript('build/dbg/SConscript')
+elif isdev:
+  env.SConscript('build/dev/SConscript')
+else:
+  env.SConscript('build/opt/SConscript')
