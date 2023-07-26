@@ -2,6 +2,7 @@
 
 Unicode True
 !Include "WinMessages.nsh"
+!include "FileFunc.nsh"
 !include Sections.nsh
 !include LogicLib.nsh
 !include x64.nsh
@@ -12,6 +13,15 @@ Name "Debugmode FrameServer"
 OutFile "fssetup.exe"
 BrandingText " "
 SetCompressor lzma
+
+VIProductVersion "4.22.0.0"
+VIAddVersionKey "ProductName" "Debugmode FrameServer"
+VIAddVersionKey "CompanyName" "Satish Kumar. S"
+VIAddVersionKey "FileVersion" "4.22"
+VIAddVersionKey "LegalCopyright" "© Satish Kumar. S. All Rights Reserved."
+VIAddVersionKey "FileDescription" "Installer for Debugmode FrameServer"
+
+Var installMode
 
 Page license
 Page components "" "" postComponentsPage
@@ -80,9 +90,8 @@ FunctionEnd
 ;--------------------------------------------
 Function AbortIfSectionNotSelected
   IntOp $R0 $R0 & ${SF_SELECTED}
-  StrCmp $R0 "${SF_SELECTED}" noabort
+  StrCmp $R0 "${SF_SELECTED}" +2
   Abort 1
-noabort:
 FunctionEnd
 
 ;----------- begin sections ----------------
@@ -92,6 +101,8 @@ ComponentText "Debugmode FrameServer comes with plug-ins for major video editing
 Section "Debugmode FrameServer Core (required)" secCore
   SetShellVarContext all
   SectionIn 1 RO
+  IfSilent 0 +2    ;-- On silent/HOS installs, postCoreDirPage doesn't get called so set this manually.
+  StrCpy $0 "$PROGRAMFILES64\Debugmode\FrameServer\"
   StrCpy $FsInstallDir "$0"
   SetOutPath "$0"
   File Bin\fscommon.dll
@@ -128,20 +139,21 @@ Section "Debugmode FrameServer Core (required)" secCore
 ;  WriteIniStr $SYSDIR\Control.ini drivers.desc dfsc.dll "Debugmode FSVFWC (internal use)"
 ;  WriteIniStr $SYSDIR\Control.ini drivers.desc dfscacm.dll "Debugmode FSACMC (internal use)"
 
-  MessageBox MB_YESNO "Create a Program Group in the Start Menu?" IDNO lblAfterProgramGroup
-    CreateDirectory "$SMPROGRAMS\Debugmode\FrameServer"
-    CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\FrameServer Network Client.lnk" "$0\DFsNetClient.exe" 0 "$0\fscommon.dll"
-    CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\Uninstall FrameServer.lnk" "$0\fsuninst.exe"
-  lblAfterProgramGroup:
+  CreateDirectory "$SMPROGRAMS\Debugmode\FrameServer"
+  CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\FrameServer Network Client.lnk" "$0\DFsNetClient.exe" 0 "$0\fscommon.dll"
+  CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\Uninstall FrameServer.lnk" "$0\fsuninst.exe"
 SectionEnd
 
 Section "Dokan Library (required)" secDokan
   ExecWait '"$FsInstallDir\FsProxy.exe" /getdv' $4
   ${If} $4 < 400
-    MessageBox MB_OK "I'll now install Dokan, a library needed by FrameServer."
+    MessageBox MB_OK "I'll now install Dokan, a library needed by FrameServer." /SD IDOK
     SetOutPath "$FsInstallDir"
     File Dokan_x64.msi
-    ExecWait 'msiexec /package "$FsInstallDir\Dokan_x64.msi"'
+    StrCpy $5 ""
+    IfSilent 0 +2
+    StrCpy $5 "/passive /qn"
+    ExecWait 'msiexec $5 /package "$FsInstallDir\Dokan_x64.msi"'
   ${EndIf}
 SectionEnd
 
@@ -247,6 +259,7 @@ Function showPremiereDirPage
 FunctionEnd
 
 Function postComponentsPage
+  IfSilent noabort
   SectionGetFlags ${secVegasFrom18Plug} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
   StrCmp $R0 "${SF_SELECTED}" noabort
@@ -286,11 +299,14 @@ FunctionEnd
 Function .onInit
   Call AbortIf32BitOS
   SetRegView 64 
+  ${GetOptions} $CMDLINE "/mode" $installMode
+  StrCmp $installMode "hos" 0 +2
+  SetSilent silent
 FunctionEnd
 
 Function .onInstSuccess
   DeleteRegValue HKEY_CURRENT_USER "SOFTWARE\Debugmode\FrameServer" "updateUrl"
-  MessageBox MB_OK "Installation complete."
+  MessageBox MB_OK "Installation complete." /SD IDOK
 FunctionEnd
   
 ;----------- begin uninstall settings/section ----------------

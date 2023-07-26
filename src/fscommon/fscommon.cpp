@@ -691,6 +691,22 @@ bool FrameServerImpl::BlankAviReadAudioSamples(unsigned long second, void* readD
   return (!stopServing && rval);
 }
 
+// This function is unused as of now, but here so that if needed we can use it in future.
+bool isRunViaHOS() {
+  HKEY regKey = 0;
+  RegOpenKeyEx(HKEY_CURRENT_USER, REGISTRY_FOLDER, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, &regKey);
+  if (!regKey)
+    return false;
+
+  DWORD isHosValue = 0;
+  DWORD size = sizeof(isHosValue);
+  RegQueryValueEx(regKey, _T("isHOS"), 0, 0, (LPBYTE)&isHosValue, &size);
+  RegDeleteValue(regKey, _T("isHOS"));
+
+  RegCloseKey(regKey);
+  return isHosValue != 0;
+}
+
 bool FrameServerImpl::Run() {
   if (!ghResInst)
     return false;
