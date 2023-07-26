@@ -272,7 +272,7 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
   LONGLONG curpos, nextpos;
   curpos = (second * (LONGLONG)FfpHeader.Audio.wfx.nSamplesPerSec);
   nextpos = ((second + 1) * (LONGLONG)FfpHeader.Audio.wfx.nSamplesPerSec);
-  nextpos = min(nextpos, FfpHeader.Audio.ccTotal);
+  nextpos = max(curpos, min(nextpos, FfpHeader.Audio.ccTotal));  // ensure that curpos <= nextpos <= ccTotal
   ULONG ccToRead = (ULONG)(nextpos - curpos), ccActuallyRead = 0;
   *datalen = ccToRead * FfpHeader.Audio.wfx.nBlockAlign;
   if (*data == NULL)

@@ -1,5 +1,6 @@
 ;----------- begin script ----------------
 
+Unicode True
 !Include "WinMessages.nsh"
 !include Sections.nsh
 !include LogicLib.nsh
@@ -95,10 +96,12 @@ Section "Debugmode FrameServer Core (required)" secCore
   SetOutPath "$0"
   File Bin\fscommon.dll
   File Bin\ImageSequence.dll
+  File Bin\FsProxy.exe
   File Bin\DFsNetClient.exe
   File Bin\DFsNetServer.exe
   File Bin\dfscVegasOutV2.dll
   File Bin\dfscVegasOutV3.dll
+  File dokan1.dll
   WriteUninstaller "$0\fsuninst.exe"
 
   ${DisableX64FSRedirection}
@@ -130,6 +133,16 @@ Section "Debugmode FrameServer Core (required)" secCore
     CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\FrameServer Network Client.lnk" "$0\DFsNetClient.exe" 0 "$0\fscommon.dll"
     CreateShortcut "$SMPROGRAMS\Debugmode\FrameServer\Uninstall FrameServer.lnk" "$0\fsuninst.exe"
   lblAfterProgramGroup:
+SectionEnd
+
+Section "Dokan Library (required)" secDokan
+  ExecWait '"$FsInstallDir\FsProxy.exe" /getdv' $4
+  ${If} $4 < 400
+    MessageBox MB_OK "I'll now install Dokan, a library needed by FrameServer."
+    SetOutPath "$FsInstallDir"
+    File Dokan_x64.msi
+    ExecWait 'msiexec /package "$FsInstallDir\Dokan_x64.msi"'
+  ${EndIf}
 SectionEnd
 
 Section /o "Magix Vegas Plugin - from Vegas 18" secVegasFrom18Plug
@@ -322,6 +335,9 @@ Section Uninstall
   Delete /REBOOTOK "$WINDIR\SysWOW64\dfscacm32.dll"
   Delete "$INSTDIR\fscommon.dll"
   Delete "$INSTDIR\ImageSequence.dll"
+  Delete "$INSTDIR\dokan1.dll"
+  Delete "$INSTDIR\Dokan_x64.msi"
+  Delete "$INSTDIR\FsProxy.exe"
   Delete "$INSTDIR\DFsNetClient.exe"
   Delete "$INSTDIR\DFsNetServer.exe"
   Delete "$INSTDIR\dfscVegasOutV2.dll"

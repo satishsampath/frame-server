@@ -102,7 +102,7 @@ PremiereFSImpl::PremiereFSImpl(SPBasicSuite* bs) {
       const_cast<const void**>(reinterpret_cast<void**>(&ppixSuite)));
   basicSuite->AcquireSuite(kPrSDKMemoryManagerSuite, kPrSDKMemoryManagerSuiteVersion,
       const_cast<const void**>(reinterpret_cast<void**>(&memorySuite)));
-  pixelFormat[0][1] = PrPixelFormat_BGRA_4444_8u;
+  pixelFormat[0][0] = PrPixelFormat_BGRA_4444_8u;
   pixelFormat[0][1] = PrPixelFormat_BGRA_4444_8u;
   pixelFormat[1][0] = PrPixelFormat_VUYA_4444_8u;
   pixelFormat[1][1] = PrPixelFormat_BGRA_4444_8u;
@@ -280,6 +280,7 @@ void PremiereFSImpl::OnVideoRequest() {
   renderParams.inRequestedPixelFormatArrayCount = 1;
   renderParams.inRequestedPixelFormatArray = &pixelFormat[0][0];
   if (serveFormat == sfV210) {
+    renderParams.inRequestedPixelFormatArrayCount = 2;
     renderParams.inRequestedPixelFormatArray = &pixelFormat[2][0];
   } else if (serveFormat == sfYUY2) {
     renderParams.inRequestedPixelFormatArrayCount = 2;

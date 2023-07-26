@@ -10,5 +10,6 @@ env.SConscript(
     'VegasV2/SConscript',
 #    'Wax/SConscript',
     'dist/SConscript',
+    'dokanserve/SConscript',
   ]
 )

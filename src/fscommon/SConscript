@@ -35,7 +35,7 @@ env.Install('#/src/dist/bin', bin[0])
 # ---- common.lib ----
 
 # Build the MBCS version of the library
-cpppath = ['..', '../dfsc', '../utils']
+cpppath = ['..', '../dfsc', '../utils', '../dokanserve/dokan/include']
 co_env = env.Clone()
 co_env['CPPPATH'] = cpppath
 co_env.Library(

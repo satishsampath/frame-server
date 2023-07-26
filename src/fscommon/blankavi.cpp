@@ -24,6 +24,11 @@
 #include <aviriff.h>
 #include "blankavi.h"
 
+#ifndef streamtypeVIDEO
+#define streamtypeVIDEO FCC('vids')
+#define streamtypeAUDIO FCC('auds')
+#endif
+
 bool IsAudioCompatible(int bitsPerSample, int samplingRate) {
   if (bitsPerSample != 8 && bitsPerSample != 16)
     return false;

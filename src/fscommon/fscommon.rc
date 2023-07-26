@@ -79,16 +79,18 @@ BEGIN
     CONTROL         "&Write audio as PCM samples in signpost AVI ",
                     IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     26,70,157,10
+    CONTROL         "Serve as virtual uncompressed AVI", IDC_SERVEVIRTUALUNCOMPRESSEDAVI,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,26,83,157,10
     CONTROL         "Enable &Network Frameserving",IDC_NETSERVE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,26,83,111,10
-    EDITTEXT        IDC_NETPORT,158,93,39,13,ES_AUTOHSCROLL
+                    BS_AUTOCHECKBOX | WS_TABSTOP | NOT WS_VISIBLE,26,83,111,10
+    EDITTEXT        IDC_NETPORT,158,93,39,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
     DEFPUSHBUTTON   "N&ext",IDOK,104,169,55,14
     LTEXT           "Please set/check the following options before starting to FrameServe.",
                     IDC_STATIC,4,30,220,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,235,1
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,162,235,1
     LTEXT           "Network &port to use for frameserving",IDC_STATIC,38,96,
-                    115,8
+                    115,8,NOT WS_VISIBLE
     LTEXT           "Format",IDC_STATIC,25,58,22,8
     PUSHBUTTON      "&Cancel",IDCANCEL,171,169,55,14
     CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 235, 25
@@ -118,7 +120,7 @@ BEGIN
     EDITTEXT        IDC_WARNING,7,45,219,84,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "4.1",IDC_VERSION,206,29,15,8
+    LTEXT           "4.20",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_ICON | SS_REALSIZECONTROL,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -129,28 +131,33 @@ STYLE DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "FrameServer - (Status)"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
+    PUSHBUTTON      "Copy to clipboard",IDC_COPYPATH,161,110,65,14
+    EDITTEXT        IDC_EDIT1,10,112,151,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
     PUSHBUTTON      "About",IDC_ABOUT,6,169,50,14
     PUSHBUTTON      "Pause",IDC_PAUSE,114,169,50,14
     PUSHBUTTON      "Resume",IDC_RESUME,114,169,50,14, NOT WS_VISIBLE
     PUSHBUTTON      "Stop Serving",IDCANCEL,171,169,55,14
-    EDITTEXT        IDC_EDIT1,18,112,212,12,ES_AUTOHSCROLL | ES_READONLY | 
+    EDITTEXT        IDC_EDIT1,10,112,151,12,ES_AUTOHSCROLL | ES_READONLY | 
                     NOT WS_BORDER
     LTEXT           "Signpost:",IDC_STATIC,4,101,30,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,235,1
-    LTEXT           "Video:",IDC_STATIC,18,136,21,8
-    LTEXT           "",IDC_VIDEOSTATS,41,136,182,8
-    LTEXT           "Audio:",IDC_STATIC,18,148,21,8
-    LTEXT           "",IDC_AUDIOSTATS,41,148,182,8
+    LTEXT           "Video:",IDC_STATIC,10,136,21,8
+    LTEXT           "",IDC_VIDEOSTATS,33,136,182,8
+    LTEXT           "Audio:",IDC_STATIC,10,148,21,8
+    LTEXT           "",IDC_AUDIOSTATS,33,148,182,8
     LTEXT           "Statistics:",IDC_STATIC,4,124,31,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,162,235,1
     LTEXT           "Settings:",IDC_STATIC,4,30,28,8
-    LTEXT           "",IDC_NETCLIENTSTATS,41,124,182,8
+    LTEXT           "",IDC_NETCLIENTSTATS,41,124,182,8,NOT WS_VISIBLE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,97,235,1
+    CONTROL         "Serve as virtual uncompressed AVI",IDC_SERVEVIRTUALUNCOMPRESSEDAVI,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,14,69,157,10
     CONTROL         "Enable &Network Frameserving",IDC_NETSERVE,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,14,69,111,10
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP | NOT WS_VISIBLE,14,69,111,10
     LTEXT           "Network &port to use for frameserving",IDC_STATIC,26,82,
-                    115,8
-    EDITTEXT        IDC_NETPORT,146,79,39,13,ES_AUTOHSCROLL | WS_DISABLED
+                    115,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_NETPORT,146,79,39,13,ES_AUTOHSCROLL | WS_DISABLED | NOT WS_VISIBLE
     CONTROL         "&Write audio as PCM samples in signpost AVI ",
                     IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
                     WS_TABSTOP,14,56,157,10

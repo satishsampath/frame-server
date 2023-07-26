@@ -39,13 +39,6 @@
 #endif  // defined(_WIN64)
 
 enum {
-  sfRGB24 = 0,
-  sfRGB32,
-  sfYUY2,
-  sfV210,
-};
-
-enum {
   idfRGB32 = 0,
   idfAYUV,
   idfV210,
@@ -79,7 +72,7 @@ public:
   DWORD numVideoFrames;     // numAudioFrames will be numVideoFrames*100, 100 audio frames per video frame
   double fps;
   DWORD width, height;      // video width & height in pixels
-  HWND parentWnd, servingdlg;
+  HWND parentWnd, servingdlg, signpostProgressDlg;
   TCHAR filename[MAX_PATH];
 
   HANDLE varFile;
@@ -87,12 +80,18 @@ public:
   HANDLE audioEncEvent, audioDecEvent;
   DfscData* vars;
 
+  PROCESS_INFORMATION dokanServeProcInfo;
+  HANDLE dokanServeJob;
+  wchar_t dokanSignpostFilePath[MAX_PATH];
+  wchar_t dokanAudioCacheFilePath[MAX_PATH];
+
 public:
   void Init(bool _hasAudio, DWORD _audioSamplingRate, DWORD _audioBitsPerSample, DWORD _audioChannels,
             DWORD _numVideoFrames, double _fps, DWORD _width, DWORD _height, HWND _parentWnd, TCHAR* _filename);
   static bool BlankAviReadAudioSamples(unsigned long second, void* readData, unsigned char** data,
                                        unsigned long* datalen);
   bool Run();
+  void RunImpl();
   virtual void OnVideoRequest() = 0;
   virtual void OnAudioRequest() = 0;
   virtual bool OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* datalen) = 0;

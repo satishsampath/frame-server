@@ -6,7 +6,8 @@ env['CPPDEFINES'] += ['_USRDLL']
 env['RCFLAGS'] += ['/d', 'PRWIN_ENV']
 env['CPPPATH'] = ['../sdks/Premiere/cs5/examples/headers', '..', '../fscommon', '../dfsc', '../utils']
 env['LIBS'].remove('common.lib')
-env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'common.lib']
+env['LIBS'] += ['dokan1.lib', 'rpcrt4.lib', 'wininet.lib', 'common.lib']
+env['LIBPATH'] += ['../dokanserve/dokan/lib']
 
 env['PDB'] = 'dfscPremiereOut.pdb'
 bin = env.SharedLibrary(

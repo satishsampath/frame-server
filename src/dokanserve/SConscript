@@ -1,0 +1,22 @@
+Import('env')
+
+# ---- FsProxy.exe ----
+ps_env = env.Clone()
+
+ps_env['LIBS'] += ['gdiplus.lib', 'avi20.lib', 'dokan1.lib']
+ps_env['CPPPATH'] = ['../../../AVI20/include','../codec','dokan/include']
+ps_env['LIBPATH'] += ['../../../AVI20/builds/x64/Release','dokan/lib']
+
+target = 'FsProxy'
+ps_env['PDB'] = target + '.pdb'
+bin = ps_env.Program(
+  target,
+  [
+    'DokanServer.cpp',
+    'DokanSignpost.cpp',
+    'FsProxy.cpp',
+    'AviFileWrapperImpl.cpp',
+    'AviFrameManagerImpl.cpp',
+  ]
+)
+env.Install('#/src/dist/bin', bin[0])

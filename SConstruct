@@ -65,7 +65,7 @@ def SetupEnv(environ):
     out_dir = 'build/dev'
     ccflags = ['/MD', '/W3', '/Od', '/Fd', '/Gy', '/EHsc', '/Zi', '/errorReport:prompt']
     linkflags = ['/DEBUG' , '/MANIFEST', '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'', '/SUBSYSTEM:WINDOWS', '/DYNAMICBASE' , '/NXCOMPAT',  '/ERRORREPORT:PROMPT']
-    cppdefines = ['_WINDOWS', 'UNICODE', '_UNICODE', 'NDEBUG']
+    cppdefines = ['_WINDOWS', 'UNICODE', '_UNICODE', 'NDEBUG', 'FSDEV']
   else:
     out_dir = 'build/opt'
     ccflags = ['/MD', '/W3', '/O2', '/Oi', '/GL', '/FD', '/Gy', '/EHsc', '/Zi', '/errorReport:prompt']

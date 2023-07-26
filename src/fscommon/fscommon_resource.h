@@ -48,6 +48,8 @@
 #define IDS_ABOUTDLG_COPYRIGHT          1404
 #define IDC_PAUSE                       1405
 #define IDC_RESUME                      1406
+#define IDC_SERVEVIRTUALUNCOMPRESSEDAVI 1407
+#define IDC_COPYPATH                    1408
 
 // Next default values for new objects
 // 

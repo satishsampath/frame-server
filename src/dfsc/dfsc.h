@@ -28,6 +28,14 @@
 static const DWORD FOURCC_DFSC = mmioFOURCC('D', 'F', 'S', 'C');
 #define WAVE_FORMAT_DFSC 0xDFAC
 
+// Format in which the video data is served, based on user selection
+enum {
+  sfRGB24 = 0,
+  sfRGB32,
+  sfYUY2,
+  sfV210,
+};
+
 #pragma pack(4)
 
 typedef struct {
@@ -48,6 +56,10 @@ typedef struct {
   WAVEFORMATEX wfx;
   DWORD videooffset;
   DWORD audiooffset;
+  int serveFormat;
+  HWND servingDlg;
+  DWORD numVideoFrames;
+  int fpsNumerator, fpsDenominator;
 } DfscData;
 
 #pragma pack()

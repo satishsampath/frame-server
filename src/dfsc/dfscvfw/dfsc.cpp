@@ -19,6 +19,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
+#include <windows.h>
+#include <vfw.h>
 #include "../dfsc.h"
 #include "../../utils/utils.h"
 #include <crtdbg.h>

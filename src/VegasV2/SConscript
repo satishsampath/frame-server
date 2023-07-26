@@ -30,8 +30,8 @@ for sdkVersionNumber in range(2, 4):
 
   dll_env['CPPDEFINES'] += ['_USRDLL', 'VEGAS_SDK_V' + strVersionNumber]
   dll_env['CPPPATH'] = [sdkDir + 'libFileIO', '..', '../fscommon', '../dfsc', '../utils']
-  dll_env['LIBS'] += ['rpcrt4.lib', 'wininet.lib', 'libfileiov' + strVersionNumber + '.lib']
-  dll_env['LIBPATH'] += ['../VegasV2']
+  dll_env['LIBS'] += ['dokan1.lib', 'rpcrt4.lib', 'wininet.lib', 'libfileiov' + strVersionNumber + '.lib']
+  dll_env['LIBPATH'] += ['../dokanserve/dokan/lib', '../VegasV2']
   dll_env['LINKFLAGS'] += ['/IGNOREIDL']
 
   target = 'dfscVegasOutV' + strVersionNumber
