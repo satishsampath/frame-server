@@ -43,8 +43,10 @@
 BOOL saveAsImageSequence = FALSE;
 TCHAR imageSequencePath[MAX_PATH * 2] = _T("");
 UINT imageSequenceFormat = ImageSequenceFormatPNG;
+wchar_t commandToRunOnFsStart[MAX_PATH] = L"";
+BOOL runCommandOnFsStart = FALSE, endAfterRunningCommand = FALSE;
 
-BOOL pcmAudioInAvi = FALSE, networkServing = FALSE, serveVirtualUncompressedAvi = FALSE;
+BOOL pcmAudioInAvi = FALSE, networkServing = FALSE, serveVirtualUncompressedAvi = TRUE;
 UINT networkPort = 8278, serveFormat = sfRGB32;
 BOOL stopServing = FALSE, pauseServing = FALSE;
 HWND appwnd;
@@ -165,17 +167,31 @@ DLGPROCRET CALLBACK AboutDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 void UpdateImageSequenceControls(HWND dlg) {
-  EnableWindow(GetDlgItem(dlg, IDC_SERVEASRGB24), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_SERVEASRGB32), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_SERVEASYUY2), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_SERVEASV210), !saveAsImageSequence);
+  int videoShow = saveAsImageSequence ? SW_HIDE : SW_SHOW;
+  int imageSequenceShow = saveAsImageSequence ? SW_SHOW : SW_HIDE;
+  ShowWindow(GetDlgItem(dlg, IDC_STATIC_FORMAT), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_SERVEASRGB24), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_SERVEASRGB32), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_SERVEASYUY2), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_SERVEASV210), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_SERVEVIRTUALUNCOMPRESSEDAVI), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_PCMAUDIOINAVI), videoShow);
   EnableWindow(GetDlgItem(dlg, IDC_PCMAUDIOINAVI), !saveAsImageSequence && !serveVirtualUncompressedAvi);
-  EnableWindow(GetDlgItem(dlg, IDC_NETSERVE), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_NETPORT), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_SERVEVIRTUALUNCOMPRESSEDAVI), !saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEPATH), saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEBROWSE), saveAsImageSequence);
-  EnableWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), saveAsImageSequence);
+  ShowWindow(GetDlgItem(dlg, IDC_RUNCOMMANDONFSSTART), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_COMMANDTORUN), videoShow);
+  ShowWindow(GetDlgItem(dlg, IDC_ENDAFTERRUNNINGCOMMAND), videoShow);
+  //ShowWindow(GetDlgItem(dlg, IDC_NETSERVE), !saveAsImageSequence);
+  //ShowWindow(GetDlgItem(dlg, IDC_NETPORT), !saveAsImageSequence);
+  ShowWindow(GetDlgItem(dlg, IDC_STATIC_IMAGESEQUENCEPATH), imageSequenceShow);
+  ShowWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEPATH), imageSequenceShow);
+  ShowWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEBROWSE), imageSequenceShow);
+  ShowWindow(GetDlgItem(dlg, IDC_STATIC_IMAGESEQUENCEFORMAT), imageSequenceShow);
+  ShowWindow(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), imageSequenceShow);
+}
+
+void UpdateRunCommandOnFsStartControls(HWND dlg) {
+  EnableWindow(GetDlgItem(dlg, IDC_COMMANDTORUN), IsDlgButtonChecked(dlg, IDC_RUNCOMMANDONFSSTART));
+  EnableWindow(GetDlgItem(dlg, IDC_ENDAFTERRUNNINGCOMMAND), IsDlgButtonChecked(dlg, IDC_RUNCOMMANDONFSSTART));
 }
 
 int CALLBACK DirBrowseDlgCallback(HWND wnd, UINT msg, LPARAM lp, LPARAM data) {
@@ -204,6 +220,12 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       RegQueryValueEx(key, _T("serveFormat"), 0, 0, (LPBYTE)&serveFormat, &size);
       size = sizeof(networkPort);
       RegQueryValueEx(key, _T("networkPort"), 0, 0, (LPBYTE)&networkPort, &size);
+      size = sizeof(runCommandOnFsStart);
+      RegQueryValueEx(key, _T("runCommandOnFsStart"), 0, 0, (LPBYTE)&runCommandOnFsStart, &size);
+      size = sizeof(commandToRunOnFsStart);
+      RegQueryValueEx(key, _T("commandToRunOnFsStart"), 0, 0, (LPBYTE)commandToRunOnFsStart, &size);
+      size = sizeof(endAfterRunningCommand);
+      RegQueryValueEx(key, _T("endAfterRunningCommand"), 0, 0, (LPBYTE)&endAfterRunningCommand, &size);
       size = sizeof(saveAsImageSequence);
       RegQueryValueEx(key, _T("saveAsImageSequence"), 0, 0, (LPBYTE)&saveAsImageSequence, &size);
       size = sizeof(imageSequenceFormat);
@@ -221,6 +243,9 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
     EnableWindow(GetDlgItem(dlg, IDC_NETPORT), networkServing);
     CheckDlgButton(dlg, IDC_SERVEVIRTUALUNCOMPRESSEDAVI, serveVirtualUncompressedAvi);
+    CheckDlgButton(dlg, IDC_RUNCOMMANDONFSSTART, runCommandOnFsStart);
+    CheckDlgButton(dlg, IDC_ENDAFTERRUNNINGCOMMAND, endAfterRunningCommand);
+    SetDlgItemText(dlg, IDC_COMMANDTORUN, commandToRunOnFsStart);
 
     SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("JPEG"));
     SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_ADDSTRING, 0, (LPARAM)_T("PNG"));
@@ -231,7 +256,11 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     SetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath);
     CheckRadioButton(dlg, IDC_OUTPUTVIDEO, IDC_OUTPUTIMAGESEQUENCE,
         (saveAsImageSequence ? IDC_OUTPUTIMAGESEQUENCE : IDC_OUTPUTVIDEO));
+
+    SendMessage(GetDlgItem(dlg, IDC_COMMANDTORUN), EM_SETCUEBANNER, FALSE,
+      (LPARAM) L"e.g. c:\\ffmpeg\\ffmpeg.exe -i \"%~1\" -c:v libx264 \"%~1_new.mp4\"");
     UpdateImageSequenceControls(dlg);
+    UpdateRunCommandOnFsStartControls(dlg);
   }
   break;
   case WM_COMMAND:
@@ -311,6 +340,8 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       saveAsImageSequence = TRUE;
       UpdateImageSequenceControls(dlg);
     }
+    if (LOWORD(wp) == IDC_RUNCOMMANDONFSSTART)
+      UpdateRunCommandOnFsStartControls(dlg);
 
     if (LOWORD(wp) == IDCANCEL)
       EndDialog(dlg, IDCANCEL);
@@ -337,6 +368,9 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
       networkServing = IsDlgButtonChecked(dlg, IDC_NETSERVE);
       networkPort = GetDlgItemInt(dlg, IDC_NETPORT, NULL, FALSE);
       serveVirtualUncompressedAvi = IsDlgButtonChecked(dlg, IDC_SERVEVIRTUALUNCOMPRESSEDAVI);
+      runCommandOnFsStart = IsDlgButtonChecked(dlg, IDC_RUNCOMMANDONFSSTART);
+      endAfterRunningCommand = IsDlgButtonChecked(dlg, IDC_ENDAFTERRUNNINGCOMMAND);
+      GetDlgItemText(dlg, IDC_COMMANDTORUN, commandToRunOnFsStart, _countof(commandToRunOnFsStart));
       saveAsImageSequence = IsDlgButtonChecked(dlg, IDC_OUTPUTIMAGESEQUENCE);
       GetDlgItemText(dlg, IDC_IMAGESEQUENCEPATH, imageSequencePath, _countof(imageSequencePath));
       imageSequenceFormat = (UINT)SendMessage(GetDlgItem(dlg, IDC_IMAGESEQUENCEFORMAT), CB_GETCURSEL, 0, 0);
@@ -349,6 +383,10 @@ DLGPROCRET CALLBACK OptionsDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         RegSetValueEx(key, _T("networkServing"), 0, REG_DWORD, (LPBYTE)&networkServing, sizeof(networkServing));
         RegSetValueEx(key, _T("serveVirtualUncompressedAvi"), 0, REG_DWORD, (LPBYTE)&serveVirtualUncompressedAvi,
           sizeof(serveVirtualUncompressedAvi));
+        RegSetValueEx(key, _T("runCommandOnFsStart"), 0, REG_DWORD, (LPBYTE)&runCommandOnFsStart, sizeof(runCommandOnFsStart));
+        RegSetValueEx(key, _T("commandToRunOnFsStart"), 0, REG_SZ, (LPBYTE)commandToRunOnFsStart,
+          (DWORD)(wcslen(commandToRunOnFsStart) + 1) * sizeof(wchar_t));
+        RegSetValueEx(key, _T("endAfterRunningCommand"), 0, REG_DWORD, (LPBYTE)&endAfterRunningCommand, sizeof(endAfterRunningCommand));
         RegSetValueEx(key, _T("serveFormat"), 0, REG_DWORD, (LPBYTE)&serveFormat, sizeof(serveFormat));
         RegSetValueEx(key, _T("networkPort"), 0, REG_DWORD, (LPBYTE)&networkPort, sizeof(networkPort));
         RegSetValueEx(key, _T("saveAsImageSequence"), 0, REG_DWORD, (LPBYTE)&saveAsImageSequence, sizeof(saveAsImageSequence));
@@ -390,6 +428,13 @@ DLGPROCRET CALLBACK ServingDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     CheckDlgButton(dlg, IDC_NETSERVE, networkServing);
     CheckDlgButton(dlg, IDC_SERVEVIRTUALUNCOMPRESSEDAVI, serveVirtualUncompressedAvi);
     SetDlgItemInt(dlg, IDC_NETPORT, networkPort, FALSE);
+    SetDlgItemText(dlg, IDC_COMMANDTORUN, commandToRunOnFsStart);
+    CheckDlgButton(dlg, IDC_ENDAFTERRUNNINGCOMMAND, endAfterRunningCommand);
+    if (!runCommandOnFsStart) {
+      ShowWindow(GetDlgItem(dlg, IDC_STATIC_COMMANDTORUN), SW_HIDE);
+      ShowWindow(GetDlgItem(dlg, IDC_COMMANDTORUN), SW_HIDE);
+      ShowWindow(GetDlgItem(dlg, IDC_ENDAFTERRUNNINGCOMMAND), SW_HIDE);
+    }
     break;
   case WM_COMMAND:
     if (LOWORD(wp) == IDCANCEL) {
@@ -682,12 +727,18 @@ bool FrameServerImpl::Run() {
     exit(0);
   }
 #endif
-  if (dokanServeJob) {
-    PostThreadMessage(dokanServeProcInfo.dwThreadId, WM_QUIT, 0, 0);
-    WaitForSingleObject(dokanServeProcInfo.hThread, 30000);
-    CloseHandle(dokanServeProcInfo.hProcess);
-    CloseHandle(dokanServeProcInfo.hThread);
-    CloseHandle(dokanServeJob);
+  if (childProcessesJob) {
+    if (dokanServeProcInfo.hProcess != NULL) {
+      PostThreadMessage(dokanServeProcInfo.dwThreadId, WM_QUIT, 0, 0);
+      WaitForSingleObject(dokanServeProcInfo.hThread, 30000);
+      CloseHandle(dokanServeProcInfo.hProcess);
+      CloseHandle(dokanServeProcInfo.hThread);
+    }
+    if (commandToRunOnFsStartProcInfo.hProcess != NULL) {
+      CloseHandle(commandToRunOnFsStartProcInfo.hProcess);
+      CloseHandle(commandToRunOnFsStartProcInfo.hThread);
+    }
+    CloseHandle(childProcessesJob);
   }
 
   // remove the signpost file to prevent issues after closing the FS.
@@ -806,15 +857,18 @@ void FrameServerImpl::RunImpl() {
   };
 
   // Should we serve this AVI as a virtual file system AVI?
-  dokanServeJob = NULL;
+  childProcessesJob = NULL;
   ZeroMemory(&dokanServeProcInfo, sizeof(dokanServeProcInfo));
-  if (serveVirtualUncompressedAvi) {
-    // Start a win32 Job to keep track & auto-terminate child process if we crash.
-    dokanServeJob = CreateJobObject(NULL, NULL);
+  ZeroMemory(&commandToRunOnFsStartProcInfo, sizeof(commandToRunOnFsStartProcInfo));
+  if (serveVirtualUncompressedAvi || (runCommandOnFsStart && wcslen(commandToRunOnFsStart) > 0)) {
+    // Start a win32 Job to keep track & auto-terminate child processes if we crash.
+    childProcessesJob = CreateJobObject(NULL, NULL);
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = { 0 };
     jeli.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-    SetInformationJobObject(dokanServeJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli));
+    SetInformationJobObject(childProcessesJob, JobObjectExtendedLimitInformation, &jeli, sizeof(jeli));
+  }
 
+  if (serveVirtualUncompressedAvi) {
     // Run the child process to proxy the frameserved file as a virtual uncompressed AVI
     wchar_t command[MAX_PATH];
     wcscpy_s(command, _countof(command), installDir);
@@ -823,7 +877,7 @@ void FrameServerImpl::RunImpl() {
     swprintf_s(params, _countof(params), L"\"%s\" DfscData%d", command, stream);
     STARTUPINFO sinfo = { 0 };
     sinfo.cb = sizeof(sinfo);
-    BOOL ret = CreateProcessInJob(dokanServeJob, command, params, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL,
+    BOOL ret = CreateProcessInJob(childProcessesJob, command, params, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL,
       &sinfo, &dokanServeProcInfo);
     if (!ret || !dokanServeProcInfo.hProcess) {
       MessageBox(servingdlg,
@@ -952,6 +1006,30 @@ void FrameServerImpl::RunImpl() {
   if (saveAsImageSequence) {
     imageSequenceThreadHandle = CreateThread(NULL, 0,
         ImageSequenceExportThreadProc, vars, 0, NULL);
+  } else if (runCommandOnFsStart && wcslen(commandToRunOnFsStart) > 0) {
+    wchar_t commandline[MAX_PATH * 2] = L"";
+    wchar_t* ptr = commandToRunOnFsStart;
+    while (*ptr != 0) {
+      wchar_t* searchPos = wcsstr(ptr, L"%~1");
+      if (searchPos) {
+        wcsncat_s(commandline, _countof(commandline), ptr, searchPos - ptr);
+        wcscat_s(commandline, _countof(commandline), signpostPathToShow);
+        ptr = searchPos + 3;
+      } else {
+        wcscat_s(commandline, _countof(commandline), ptr);
+        ptr += wcslen(ptr);
+      }
+    }
+
+    STARTUPINFO sinfo = { 0 };
+    sinfo.cb = sizeof(sinfo);
+    BOOL ret = CreateProcessInJob(childProcessesJob, NULL, commandline, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL,
+      &sinfo, &commandToRunOnFsStartProcInfo);
+    if (!ret || !commandToRunOnFsStartProcInfo.hProcess) {
+      wcscat_s(commandline, _countof(commandline), L"\n\nUnable to execute this command. Please check and try again.");
+      MessageBox(servingdlg, commandline, APPNAME, MB_OK | MB_ICONEXCLAMATION);
+      stopServing = true;
+    }
   }
 
   while (!stopServing) {
@@ -989,6 +1067,8 @@ void FrameServerImpl::RunImpl() {
       evs[nevs++] = imageSequenceThreadHandle;
     if (dokanServeProcInfo.hProcess)
       evs[nevs++] = dokanServeProcInfo.hProcess;
+    if (endAfterRunningCommand && commandToRunOnFsStartProcInfo.hProcess)
+      evs[nevs++] = commandToRunOnFsStartProcInfo.hProcess;
 
     MsgWaitForMultipleObjects(nevs, evs, FALSE, INFINITE,
         QS_ALLEVENTS | QS_SENDMESSAGE | QS_MOUSE | QS_MOUSEBUTTON);
@@ -1006,6 +1086,11 @@ void FrameServerImpl::RunImpl() {
         L"The proxy process has unexpectedly died. Please stop frameserving and try again.\n\n"
         L"If this issue persists, please report it as an issue.",
         APPNAME, MB_OK | MB_ICONEXCLAMATION);
+      stopServing = true;
+    }
+    if (endAfterRunningCommand &&
+        commandToRunOnFsStartProcInfo.hProcess &&
+        WaitForSingleObject(commandToRunOnFsStartProcInfo.hProcess, 0) == WAIT_OBJECT_0) {
       stopServing = true;
     }
     if (!pauseServing) {

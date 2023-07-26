@@ -80,8 +80,9 @@ public:
   HANDLE audioEncEvent, audioDecEvent;
   DfscData* vars;
 
+  PROCESS_INFORMATION commandToRunOnFsStartProcInfo;
   PROCESS_INFORMATION dokanServeProcInfo;
-  HANDLE dokanServeJob;
+  HANDLE childProcessesJob;
   wchar_t dokanSignpostFilePath[MAX_PATH];
   wchar_t dokanAudioCacheFilePath[MAX_PATH];
 

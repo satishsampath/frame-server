@@ -50,6 +50,13 @@
 #define IDC_RESUME                      1406
 #define IDC_SERVEVIRTUALUNCOMPRESSEDAVI 1407
 #define IDC_COPYPATH                    1408
+#define IDC_COMMANDTORUN                1409
+#define IDC_ENDAFTERRUNNINGCOMMAND      1410
+#define IDC_STATIC_FORMAT               1411
+#define IDC_STATIC_COMMANDTORUN         1412
+#define IDC_STATIC_IMAGESEQUENCEPATH    1413
+#define IDC_STATIC_IMAGESEQUENCEFORMAT  1414
+#define IDC_RUNCOMMANDONFSSTART         1415
 
 // Next default values for new objects
 // 

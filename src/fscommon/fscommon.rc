@@ -64,47 +64,57 @@ STYLE DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "FrameServer - (Setup)"
 FONT 8, "MS Sans Serif"
 BEGIN
+    DEFPUSHBUTTON   "N&ext",IDOK,104,169,55,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,171,169,55,14
+
+    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 235, 25
+    CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP,0,0,235,28
+    ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_REALSIZEIMAGE,
+                    WS_EX_TRANSPARENT
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,235,1
+    LTEXT           "Please set/check the following options before starting to FrameServe.",
+                    IDC_STATIC,4,30,220,8
+
     CONTROL         "Video Output",IDC_OUTPUTVIDEO,"Button",
                     BS_AUTORADIOBUTTON,13,44,57,10
     CONTROL         "Image Sequence Output",IDC_OUTPUTIMAGESEQUENCE,"Button",
-                    BS_AUTORADIOBUTTON,13,111,93,10
+                    BS_AUTORADIOBUTTON,80,44,93,10
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDVERT,72,43,1,13
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,13,56,212,1
+
+    LTEXT           "Format",IDC_STATIC_FORMAT,13,61,22,8
     CONTROL         "RGB&24",IDC_SERVEASRGB24,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,55,58,39,10
+                    WS_GROUP,43,61,39,10
     CONTROL         "RGB&32",IDC_SERVEASRGB32,"Button",BS_AUTORADIOBUTTON,
-                    102,58,39,10
-    CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON,149,
-                    58,35,10
-    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON,196,
-                    58,35,10
+                    90,61,39,10
+    CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON,137,
+                    61,35,10
+    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON,184,
+                    61,35,10
+    CONTROL         "Serve as virtual uncompressed AVI", IDC_SERVEVIRTUALUNCOMPRESSEDAVI,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,14,73,157,10
     CONTROL         "&Write audio as PCM samples in signpost AVI ",
                     IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    26,70,157,10
-    CONTROL         "Serve as virtual uncompressed AVI", IDC_SERVEVIRTUALUNCOMPRESSEDAVI,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,26,83,157,10
+                    14,86,157,10
+    CONTROL         "Run this command once FrameServer starts",IDC_RUNCOMMANDONFSSTART,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,99,157,8
+    EDITTEXT        IDC_COMMANDTORUN,13,112,212,12,ES_AUTOHSCROLL
+    CONTROL         "End frameserving once command finishes", IDC_ENDAFTERRUNNINGCOMMAND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,22,128,148,10
     CONTROL         "Enable &Network Frameserving",IDC_NETSERVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | NOT WS_VISIBLE,26,83,111,10
     EDITTEXT        IDC_NETPORT,158,93,39,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
-    DEFPUSHBUTTON   "N&ext",IDOK,104,169,55,14
-    LTEXT           "Please set/check the following options before starting to FrameServe.",
-                    IDC_STATIC,4,30,220,8
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,25,235,1
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,162,235,1
     LTEXT           "Network &port to use for frameserving",IDC_STATIC,38,96,
                     115,8,NOT WS_VISIBLE
-    LTEXT           "Format",IDC_STATIC,25,58,22,8
-    PUSHBUTTON      "&Cancel",IDCANCEL,171,169,55,14
-    CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 235, 25
-    CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZECONTROL,0,0,235,25
-    ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20, SS_ICON | SS_REALSIZECONTROL,
-                    WS_EX_TRANSPARENT
-    LTEXT           "Path",IDC_STATIC,25,127,16,8
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,71,49,156,1
-    EDITTEXT        IDC_IMAGESEQUENCEPATH,45,125,146,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,106,115,122,1
-    PUSHBUTTON      "Browse",IDC_IMAGESEQUENCEBROWSE,194,125,31,13
-    LTEXT           "Type",IDC_STATIC,25,143,17,8
-    COMBOBOX        IDC_IMAGESEQUENCEFORMAT,45,141,48,62,CBS_DROPDOWNLIST | 
+
+    LTEXT           "Path",IDC_STATIC_IMAGESEQUENCEPATH,13,61,16,8
+    EDITTEXT        IDC_IMAGESEQUENCEPATH,33,59,158,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse",IDC_IMAGESEQUENCEBROWSE,194,59,31,13
+    LTEXT           "Type",IDC_STATIC_IMAGESEQUENCEFORMAT,25,77,17,8
+    COMBOBOX        IDC_IMAGESEQUENCEFORMAT,45,75,48,62,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,162,235,1
 END
 
 IDD_DFABOUTDLG DIALOGEX 0, 0, 233, 162
@@ -120,7 +130,7 @@ BEGIN
     EDITTEXT        IDC_WARNING,7,45,219,84,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT 
                     WS_TABSTOP
-    LTEXT           "4.20",IDC_VERSION,206,29,15,8
+    LTEXT           "4.21",IDC_VERSION,206,29,15,8
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_ICON | SS_REALSIZECONTROL,
                     WS_EX_TRANSPARENT
     LTEXT           "v",IDC_STATIC,198,29,8,8
@@ -148,28 +158,34 @@ BEGIN
     LTEXT           "",IDC_AUDIOSTATS,33,148,182,8
     LTEXT           "Statistics:",IDC_STATIC,4,124,31,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,162,235,1
-    LTEXT           "Settings:",IDC_STATIC,4,30,28,8
     LTEXT           "",IDC_NETCLIENTSTATS,41,124,182,8,NOT WS_VISIBLE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,97,235,1
+
+    LTEXT           "Format",IDC_STATIC,13,30,22,8
+    CONTROL         "RGB&24",IDC_SERVEASRGB24,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED | WS_GROUP,43,30,39,10
+    CONTROL         "RGB&32",IDC_SERVEASRGB32,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED,90,30,39,10
+    CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED,137,30,35,10
+    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED,184,30,35,10
     CONTROL         "Serve as virtual uncompressed AVI",IDC_SERVEVIRTUALUNCOMPRESSEDAVI,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,14,69,157,10
+                    BS_AUTOCHECKBOX | WS_DISABLED,14,42,157,10
+    CONTROL         "&Write audio as PCM samples in signpost AVI ",
+                    IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_DISABLED,
+                    14,55,157,10
+    LTEXT           "Run: ",IDC_STATIC_COMMANDTORUN,13,69,20,8
+    EDITTEXT        IDC_COMMANDTORUN,36,69,189,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    CONTROL         "End frameserving once command finishes", IDC_ENDAFTERRUNNINGCOMMAND,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED,22,83,148,10
+
     CONTROL         "Enable &Network Frameserving",IDC_NETSERVE,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP | NOT WS_VISIBLE,14,69,111,10
     LTEXT           "Network &port to use for frameserving",IDC_STATIC,26,82,
                     115,8, NOT WS_VISIBLE
     EDITTEXT        IDC_NETPORT,146,79,39,13,ES_AUTOHSCROLL | WS_DISABLED | NOT WS_VISIBLE
-    CONTROL         "&Write audio as PCM samples in signpost AVI ",
-                    IDC_PCMAUDIOINAVI,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
-                    WS_TABSTOP,14,56,157,10
-    LTEXT           "Format",IDC_STATIC,13,44,22,8
-    CONTROL         "RGB&24",IDC_SERVEASRGB24,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED | WS_GROUP,43,44,39,10
-    CONTROL         "RGB&32",IDC_SERVEASRGB32,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED,90,44,39,10
-    CONTROL         "&YUY2",IDC_SERVEASYUY2,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED,137,44,35,10
-    CONTROL         "&v210",IDC_SERVEASV210,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED,184,44,35,10
     CONTROL         "", IDC_BANNER_BACKGROUND, "Static", SS_OWNERDRAW, 0, 0, 233, 25
     CONTROL         IDI_FRAMESERVER,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZECONTROL,0,0,233,25
     ICON            IDI_FRAMESERVER,IDC_STATIC,11,3,20,20,SS_ICON | SS_REALSIZECONTROL,
