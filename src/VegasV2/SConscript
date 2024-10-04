@@ -1,6 +1,6 @@
 Import('env')
 
-for sdkVersionNumber in range(2, 4):
+for sdkVersionNumber in range(2, 5):
   strVersionNumber = str(sdkVersionNumber)
   sdkDir = '../sdks/VegasV' + strVersionNumber + '/'
 
@@ -11,6 +11,9 @@ for sdkVersionNumber in range(2, 4):
   fio_env['CPPPATH'] = [sdkDir + 'libFileIO']
   fio_env['LIBS'] += ['rpcrt4.lib']
   fio_env['LINKFLAGS'] += ['/IGNOREIDL']
+  if sdkVersionNumber >= 4:
+    fio_env['CPPPATH'] = [sdkDir + 'libCommon'] + fio_env['CPPPATH']
+
 
   target = 'libFileIOv' + strVersionNumber
   fio_env['PDB'] = target + '.pdb'
@@ -33,6 +36,12 @@ for sdkVersionNumber in range(2, 4):
   dll_env['LIBS'] += ['dokan1.lib', 'rpcrt4.lib', 'wininet.lib', 'libfileiov' + strVersionNumber + '.lib']
   dll_env['LIBPATH'] += ['../dokanserve/dokan/lib', '../VegasV2']
   dll_env['LINKFLAGS'] += ['/IGNOREIDL']
+
+  for i in range(3, sdkVersionNumber+1):
+    dll_env['CPPDEFINES'] += ['VEGAS_SDK_FROM_V' + str(i)]
+
+  if sdkVersionNumber >= 4:
+    dll_env['CPPPATH'] = [sdkDir + 'libCommon'] + dll_env['CPPPATH']
 
   target = 'dfscVegasOutV' + strVersionNumber
   dll_env['PDB'] = target + '.pdb'

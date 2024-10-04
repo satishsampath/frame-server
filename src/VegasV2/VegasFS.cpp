@@ -568,7 +568,7 @@ STDMETHODIMP VegasFS::GetTemplateInfo(PCSFTEMPLATEx pTemplate,
   return E_NOTIMPL;
 }
 
-#if defined(VEGAS_SDK_V3)
+#if defined(VEGAS_SDK_FROM_V3)
 STDMETHODIMP VegasFS::GetTemplateInfoText(PCSFTEMPLATEx pTemplate,
     LPWSTR pszwInfo, 
     UINT cchInfo,

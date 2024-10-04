@@ -66,7 +66,7 @@ public:
       PCSFTEMPLATEx ptplSource, SFFIO_CONFORM_TEMPLATE_REASON eConform);
   STDMETHOD(GetTemplateInfo) (PCSFTEMPLATEx pTemplate, LPVOID pvInfo, UINT cbInfo,
       SFFIO_TEMPLATE_INFO eInfoType);
-#if defined(VEGAS_SDK_V3)
+#if defined(VEGAS_SDK_FROM_V3)
   STDMETHOD(GetTemplateInfoText) (PCSFTEMPLATEx pTemplate, LPWSTR pszwInfo, UINT cchInfo,
       SFFIO_TEMPLATE_INFOTEXT eInfoType);
 #endif

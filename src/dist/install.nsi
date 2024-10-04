@@ -14,19 +14,18 @@ OutFile "fssetup.exe"
 BrandingText " "
 SetCompressor lzma
 
-VIProductVersion "4.22.0.0"
+VIProductVersion "6.0.0.0"
 VIAddVersionKey "ProductName" "Debugmode FrameServer"
 VIAddVersionKey "CompanyName" "Satish Kumar. S"
-VIAddVersionKey "FileVersion" "4.22"
+VIAddVersionKey "FileVersion" "6.0"
 VIAddVersionKey "LegalCopyright" "© Satish Kumar. S. All Rights Reserved."
 VIAddVersionKey "FileDescription" "Installer for Debugmode FrameServer"
-
-Var installMode
 
 Page license
 Page components "" "" postComponentsPage
 Page directory preCoreDirPage "" postCoreDirPage
-Page directory preVegasFrom18DirPage showVegasDirPage postVegasFrom18DirPage
+Page directory preVegasAbove22DirPage showVegasDirPage postVegasAbove22DirPage
+Page directory preVegas18To21DirPage showVegasDirPage postVegas18To21DirPage
 Page directory preVegasUpto17DirPage showVegasDirPage postVegasUpto17DirPage
 Page directory prePremiereDirPage showPremiereDirPage postPremiereDirPage
 Page instfiles
@@ -39,7 +38,12 @@ LicenseData "license.txt"
 InstallDirRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "InstallDir"
 DirText "Installation Directory" "Select where to install Debugmode FrameServer Core Files"
 
+Var installMode
 Var FsInstallDir
+Var vegasUpto17InstallDir
+Var vegas18To21InstallDir
+Var vegasAbove22InstallDir
+Var premiereInstallDir
 
 ;--------------------------------------------
 ; AbortIf32BitOS
@@ -112,6 +116,7 @@ Section "Debugmode FrameServer Core (required)" secCore
   File Bin\DFsNetServer.exe
   File Bin\dfscVegasOutV2.dll
   File Bin\dfscVegasOutV3.dll
+  File Bin\dfscVegasOutV4.dll
   File dokan1.dll
   WriteUninstaller "$0\fsuninst.exe"
 
@@ -145,51 +150,66 @@ Section "Debugmode FrameServer Core (required)" secCore
 SectionEnd
 
 Section "Dokan Library (required)" secDokan
-  ExecWait '"$FsInstallDir\FsProxy.exe" /getdv' $4
-  ${If} $4 < 400
+  ExecWait '"$FsInstallDir\FsProxy.exe" /getdv' $1
+  ${If} $1 < 400
     MessageBox MB_OK "I'll now install Dokan, a library needed by FrameServer." /SD IDOK
     SetOutPath "$FsInstallDir"
     File Dokan_x64.msi
-    StrCpy $5 ""
+    StrCpy $2 ""
     IfSilent 0 +2
-    StrCpy $5 "/passive /qn"
-    ExecWait 'msiexec $5 /package "$FsInstallDir\Dokan_x64.msi"'
+    StrCpy $2 "/passive /qn"
+    ExecWait 'msiexec $2 /package "$FsInstallDir\Dokan_x64.msi"'
   ${EndIf}
 SectionEnd
 
-Section /o "Magix Vegas Plugin - from Vegas 18" secVegasFrom18Plug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasFrom18PlugConfig Path" "$1\Frameserver.x64.fio2007-config"
+Section /o "Magix Vegas Plugin : Vegas 22+" secVegasAbove22Plug
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasAbove22PlugConfig Path" "$vegasAbove22InstallDir\Frameserver.x64.fio2007-config"
   ClearErrors
-  FileOpen $R0 "$1\Frameserver.x64.fio2007-config" w
+  FileOpen $R0 "$vegasAbove22InstallDir\Frameserver.x64.fio2007-config" w
+  FileWrite $R0 "[FileIO Plug-Ins]"
+  FileWriteByte $R0 "13"
+  FileWriteByte $R0 "10"
+  FileWrite $R0 "frameserver=$FsInstallDir\dfscVegasOutV4.dll"
+  FileClose $R0
+  IfErrors 0 funcend
+    MessageBox MB_OK|MB_ICONSTOP "Unable to create file $vegasAbove22InstallDir\Frameserver.x64.fio2007-config"
+    Goto funcend
+  funcend:
+SectionEnd
+
+Section /o "Magix Vegas Plugin : Vegas 18 - 21" secVegas18To21Plug
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "Vegas18To21PlugConfig Path" "$vegas18To21InstallDir\Frameserver.x64.fio2007-config"
+  ClearErrors
+  FileOpen $R0 "$vegas18To21InstallDir\Frameserver.x64.fio2007-config" w
   FileWrite $R0 "[FileIO Plug-Ins]"
   FileWriteByte $R0 "13"
   FileWriteByte $R0 "10"
   FileWrite $R0 "frameserver=$FsInstallDir\dfscVegasOutV3.dll"
   FileClose $R0
   IfErrors 0 funcend
-    MessageBox MB_OK|MB_ICONSTOP "Unable to create file $1\Frameserver.x64.fio2007-config"
+    MessageBox MB_OK|MB_ICONSTOP "Unable to create file $vegas18To21InstallDir\Frameserver.x64.fio2007-config"
     Goto funcend
   funcend:
 SectionEnd
 
-Section /o "Magix Vegas Plugin - upto Vegas 17" secVegasUpto17Plug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path" "$2\Frameserver.x64.fio2007-config"
+Section /o "Magix Vegas Plugin : upto Vegas 17" secVegasUpto17Plug
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path" "$vegasUpto17InstallDir\Frameserver.x64.fio2007-config"
   ClearErrors
-  FileOpen $R0 "$2\Frameserver.x64.fio2007-config" w
+  FileOpen $R0 "$vegasUpto17InstallDir\Frameserver.x64.fio2007-config" w
   FileWrite $R0 "[FileIO Plug-Ins]"
   FileWriteByte $R0 "13"
   FileWriteByte $R0 "10"
   FileWrite $R0 "frameserver=$FsInstallDir\dfscVegasOutV2.dll"
   FileClose $R0
   IfErrors 0 funcend
-    MessageBox MB_OK|MB_ICONSTOP "Unable to create file $2\Frameserver.x64.fio2007-config"
+    MessageBox MB_OK|MB_ICONSTOP "Unable to create file $vegasUpto17InstallDir\Frameserver.x64.fio2007-config"
     Goto funcend
   funcend:
 SectionEnd
 
 Section /o "Adobe Premiere Pro/Elements Plugin" secPremPlug
-  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path" "$3\dfscPremiereOut.prm"
-  SetOutPath "$3"
+  WriteRegStr HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path" "$premiereInstallDir\dfscPremiereOut.prm"
+  SetOutPath "$premiereInstallDir"
   File bin\dfscPremiereOut.prm
 SectionEnd
 
@@ -199,17 +219,43 @@ Function preCoreDirPage
   StrCpy $INSTDIR "$PROGRAMFILES64\Debugmode\FrameServer\"
 FunctionEnd
 
-Function preVegasFrom18DirPage
-  SectionGetFlags ${secVegasFrom18Plug} $R0
+Function preVegasAbove22DirPage
+  SectionGetFlags ${secVegasAbove22Plug} $R0
+  Call AbortIfSectionNotSelected
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 24.0\*.*" vegas240
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 23.0\*.*" vegas230
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 22.0\*.*" vegas220
+  Goto funcend
+vegas240:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 24.0"
+  Goto funcend
+vegas230:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 23.0"
+  Goto funcend
+vegas220:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 22.0"
+funcend:
+FunctionEnd
+
+Function preVegas18To21DirPage
+  SectionGetFlags ${secVegas18To21Plug} $R0
   Call AbortIfSectionNotSelected
   IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 18.0\*.*" vegas180
   IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 19.0\*.*" vegas190
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 20.0\*.*" vegas200
+  IfFileExists "$PROGRAMFILES64\Vegas\Vegas Pro 21.0\*.*" vegas210
   Goto funcend
 vegas180:
   StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 18.0"
   Goto funcend
 vegas190:
   StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 19.0"
+  Goto funcend
+vegas200:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 20.0"
+  Goto funcend
+vegas210:
+  StrCpy $INSTDIR "$PROGRAMFILES64\Vegas\Vegas Pro 21.0"
 funcend:
 FunctionEnd
 
@@ -260,7 +306,7 @@ FunctionEnd
 
 Function postComponentsPage
   IfSilent noabort
-  SectionGetFlags ${secVegasFrom18Plug} $R0
+  SectionGetFlags ${secVegas18To21Plug} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
   StrCmp $R0 "${SF_SELECTED}" noabort
   SectionGetFlags ${secVegasUpto17Plug} $R0
@@ -278,21 +324,27 @@ Function postCoreDirPage
   StrCpy $0 $INSTDIR
 FunctionEnd
 
-Function postVegasFrom18DirPage
+Function postVegasAbove22DirPage
   Call AbortIfInvalidInstDir
-  StrCpy $1 $INSTDIR
+  StrCpy $vegasAbove22InstallDir $INSTDIR
+  StrCpy $INSTDIR $0
+FunctionEnd
+
+Function postVegas18To21DirPage
+  Call AbortIfInvalidInstDir
+  StrCpy $vegas18To21InstallDir $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
 Function postVegasUpto17DirPage
   Call AbortIfInvalidInstDir
-  StrCpy $2 $INSTDIR
+  StrCpy $vegasUpto17InstallDir $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
 Function postPremiereDirPage
   Call AbortIfInvalidInstDir
-  StrCpy $3 $INSTDIR
+  StrCpy $premiereInstallDir $INSTDIR
   StrCpy $INSTDIR $0
 FunctionEnd
 
@@ -316,21 +368,24 @@ UninstallText "This will uninstall Debugmode FrameServer from your system"
 Section Uninstall
   SetShellVarContext all
   SetRegView 64 
-  ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasPlug Path"
-  ReadRegStr $R2 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path"
-  ReadRegStr $R3 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasFrom18PlugConfig Path"
-  ReadRegStr $R4 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path"
-  UnRegDll "$R1"
+  ReadRegStr $1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path"
+  Delete "$1"
+  ReadRegStr $1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasPlug Path"
+  UnRegDll "$1"
   Delete "$R1"
-  Delete "$R2"
-  Delete "$R3"
-  Delete "$R4"
+  ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path"
+  Delete "$R1"
+  ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "Vegas18To21PlugConfig Path"
+  Delete "$R1"
+  ReadRegStr $R1 HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasAbove22PlugConfig Path"
+  Delete "$R1"
   DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Debugmode FrameServer"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "InstallDir"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasPlug Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasUpto17PlugConfig Path"
-  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasFrom18PlugConfig Path"
-  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "PremPlug Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "Vegas18To21PlugConfig Path"
+  DeleteRegValue HKEY_LOCAL_MACHINE "SOFTWARE\Debugmode\FrameServer" "VegasAbove22PlugConfig Path"
   DeleteRegValue HKEY_LOCAL_MACHINE "Software\Microsoft\Windows NT\CurrentVersion\Drivers32" "vidc.dfsc"
   DeleteRegValue HKEY_LOCAL_MACHINE "Software\Microsoft\Windows NT\CurrentVersion\Drivers32" "msacm.dfscacm"
   DeleteRegValue HKEY_LOCAL_MACHINE "Software\Microsoft\Windows NT\CurrentVersion\Drivers.Desc" "dfsc.dll"
@@ -358,6 +413,7 @@ Section Uninstall
   Delete "$INSTDIR\DFsNetServer.exe"
   Delete "$INSTDIR\dfscVegasOutV2.dll"
   Delete "$INSTDIR\dfscVegasOutV3.dll"
+  Delete "$INSTDIR\dfscVegasOutV4.dll"
   Delete "$INSTDIR\fsuninst.exe"
   RMDir "$INSTDIR"
   IfRebootFlag doreb noreb

@@ -28,7 +28,7 @@
 #include "SfReadStreams.h"
 #include "SfErrors.h"
 #include "VegasFSRender.h"
-#ifdef VEGAS_SDK_V3
+#ifdef VEGAS_SDK_FROM_V3
   #include "SfVideo.h"
 #endif
 
@@ -303,7 +303,7 @@ bool VegasFSRender::OnAudioRequestOneSecond(DWORD second, LPBYTE* data, DWORD* d
 }
 
 void VegasFSRender::OnVideoRequest() {
-#ifndef VEGAS_SDK_V3  // For versions up to v17, which don't support the v210 video format
+#ifndef VEGAS_SDK_FROM_V3  // For versions up to v17, which don't support the v210 video format
   if (serveFormat == sfV210) {
     memset(((LPBYTE)vars) + vars->videooffset, 255, vars->videoBytesRead);
     return;
@@ -314,7 +314,7 @@ void VegasFSRender::OnVideoRequest() {
   m_pReadStreams->GetFirstReadVideoRenderStream(&pIVideoStream, NULL);
 
   if (m_bVideoFrame.size() == 0) {  // is this the first time? If so, check pixel format & allocate.
-#ifdef VEGAS_SDK_V3
+#ifdef VEGAS_SDK_FROM_V3
     // For 8-bit video formats, we convert from 8-bit RGB to the serve format ourselves.
     // For 10-bit video formats, we ask Vegas to give us in that format so that there is
     // no lossy conversion.
@@ -337,7 +337,7 @@ void VegasFSRender::OnVideoRequest() {
         }
       }
     }
-#endif // VEGAS_SDK_V3
+#endif // VEGAS_SDK_FROM_V3
     m_bVideoFrame.resize(FfpHeader.Video.bih.biSizeImage);  // allocate frame buffer to receive video.
   }
 
