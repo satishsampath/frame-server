@@ -306,6 +306,9 @@ FunctionEnd
 
 Function postComponentsPage
   IfSilent noabort
+  SectionGetFlags ${secVegasAbove22Plug} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "${SF_SELECTED}" noabort
   SectionGetFlags ${secVegas18To21Plug} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
   StrCmp $R0 "${SF_SELECTED}" noabort
