@@ -1,6 +1,6 @@
 Import('env')
 
-for sdkVersionNumber in range(2, 5):
+for sdkVersionNumber in range(2, 6):
   strVersionNumber = str(sdkVersionNumber)
   sdkDir = '../sdks/VegasV' + strVersionNumber + '/'
 

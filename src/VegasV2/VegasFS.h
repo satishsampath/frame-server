@@ -23,12 +23,17 @@
 #define VEGASV2_VEGASFS_H
 
 #include "SfRenderFileClass.h"
+#if !defined(VEGAS_SDK_FROM_V5)
 #include "SfMeta.h"
+#endif
 
 #define DEBUG_PRINT_FUNCTION_NAME OutputDebugString(L"DMFS: " __FUNCTIONW__ L"\n");
 
-class VegasFS : public ISfRenderFileClass,
-                public ISfRenderMetaSupport2 {
+class VegasFS : public ISfRenderFileClass
+#if !defined(VEGAS_SDK_FROM_V5)
+  , public ISfRenderMetaSupport2
+#endif
+{
 public:
   VegasFS();
   ~VegasFS();
@@ -38,14 +43,23 @@ public:
   STDMETHOD_(ULONG, Release) ();
 
   // ISfRenderFileClass
+#if defined(VEGAS_SDK_FROM_V5)
+  STDMETHOD(SetHostInterface)(IUnknown* pHost);
+  STDMETHOD(GetReadClassGuid)(GUID* pguidReadClass);
+#endif
+
+#if !defined(VEGAS_SDK_FROM_V5)
   STDMETHOD(SetTypeIndex) (LONG ixType);
   STDMETHOD(GetTypeIndex) (LONG * pixType);
   STDMETHOD(SetIOManager) (ISfFileIOManager * pBack);
   STDMETHOD(GetIOManager) (ISfFileIOManager * *ppBack);
+#endif
   STDMETHOD(GetTypeID) (GUID * puuid);
   STDMETHOD(GetAllowedStreamTypes) (DWORD * fdwStreamTypes);
   STDMETHOD(GetCaps) (SFFILERENDERCAPS * pCaps);
+#if !defined(VEGAS_SDK_FROM_V5)
   STDMETHOD(GetReadClass) (ISfReadFileClass * *ppReadClass);
+#endif
   STDMETHOD(BuyPropertyPages) (HWND hwndParent);
   STDMETHOD(HasAboutBox) ();
   STDMETHOD(ShowAboutBox) (HWND hwndParent);
@@ -66,14 +80,17 @@ public:
       PCSFTEMPLATEx ptplSource, SFFIO_CONFORM_TEMPLATE_REASON eConform);
   STDMETHOD(GetTemplateInfo) (PCSFTEMPLATEx pTemplate, LPVOID pvInfo, UINT cbInfo,
       SFFIO_TEMPLATE_INFO eInfoType);
+#if !defined(VEGAS_SDK_FROM_V5)
 #if defined(VEGAS_SDK_FROM_V3)
   STDMETHOD(GetTemplateInfoText) (PCSFTEMPLATEx pTemplate, LPWSTR pszwInfo, UINT cchInfo,
       SFFIO_TEMPLATE_INFOTEXT eInfoType);
+#endif
 #endif
   STDMETHOD(GetPropertyPageCount) (LONG * pcFreePages, LONG * pcPagesForSale,
       SFFILERENDERPAGEOPTIONS * prPageOptions);
   STDMETHOD(GetPropertyPage) (LONG ixIndex, IPropertyPage * *ppPropPage);
 
+#if !defined(VEGAS_SDK_FROM_V5)
   // START: ISfRenderMetaSupport
   STDMETHOD(Reset)();
   STDMETHOD(GetNextSumTag)(FOURCC* fcc, 
@@ -81,9 +98,9 @@ public:
    // START: ISfRenderMetaSupport2
   STDMETHOD(GetSupportedTypes)(SFFIO_TYPESOFMETADATA* peEmbedded,
                                SFFIO_TYPESOFMETADATA* peExternal);
+#endif
 
 public:
-  static const GUID& ms_uidReader;
   static const GUID& ms_uidRenderer;
 
 private:
@@ -92,8 +109,11 @@ private:
 
   DWORD m_dwRef;
   LONG m_ixType;
+#if !defined(VEGAS_SDK_FROM_V5)
   ISfFileIOManager* m_pFileIOManager;
+#endif
   static DWORD ms_dwStreamTypes;
+  bool m_bAllocatorAcquired = false;
 };
 
 #endif  // VEGASV2_VEGASFS_H

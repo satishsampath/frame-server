@@ -23,7 +23,9 @@
 #include <TCHAR.H>
 #include "SfEnum.h"
 #include "SfMem.h"
+#if !defined(VEGAS_SDK_FROM_V5)
 #include "SfFileIOManager.h"
+#endif
 #include "SfRenderFile.h"
 #include "fscommon.h"
 #include "fscommon_resource.h"
@@ -72,11 +74,22 @@ ExtraEncoderParameter eeParam = {0};
 const GUID& VegasFS::ms_uidRenderer(CLSID_VegasFS);
 DWORD VegasFS::ms_dwStreamTypes = SFFIO_STREAM_TYPE_AUDIO | SFFIO_STREAM_TYPE_VIDEO;
 
-VegasFS::VegasFS() : m_dwRef(0), m_ixType(-1), m_pFileIOManager(NULL) {
+VegasFS::VegasFS() : m_dwRef(0), m_ixType(-1)
+#if !defined(VEGAS_SDK_FROM_V5)
+    , m_pFileIOManager(NULL)
+#endif
+{
 }
 
 VegasFS::~VegasFS() {
+#if defined(VEGAS_SDK_FROM_V5)
+  if (m_bAllocatorAcquired) {
+    SfReleaseAllocator();
+    m_bAllocatorAcquired = false;
+  }
+#else
   SetIOManager(NULL);
+#endif
 }
 
 STDMETHODIMP VegasFS::QueryInterface(REFIID riid, LPVOID* ppvObj) {
@@ -85,7 +98,8 @@ STDMETHODIMP VegasFS::QueryInterface(REFIID riid, LPVOID* ppvObj) {
     *ppvObj = static_cast<ISfRenderFileClass*>(this);
     return S_OK;
   }
-  else 
+#if !defined(VEGAS_SDK_FROM_V5)
+  else
    if (__uuidof(ISfRenderMetaSupport) == riid)
    {
       AddRef();
@@ -99,6 +113,7 @@ STDMETHODIMP VegasFS::QueryInterface(REFIID riid, LPVOID* ppvObj) {
       *ppvObj = static_cast<ISfRenderMetaSupport2*>(this);
       return S_OK;
    }
+#endif
   return E_NOINTERFACE;
 }
 
@@ -114,6 +129,27 @@ STDMETHODIMP_(ULONG) VegasFS::Release() {
   }
   return cRef;
 }
+
+#if defined(VEGAS_SDK_FROM_V5)
+
+STDMETHODIMP VegasFS::SetHostInterface(IUnknown* pHost) {
+  if (!m_bAllocatorAcquired) {
+    m_bAllocatorAcquired = SfAcquireAllocator(pHost);
+  }
+  return S_OK;
+}
+
+STDMETHODIMP VegasFS::GetReadClassGuid(GUID* pguidReadClass) {
+  if (!pguidReadClass)
+    return E_INVALIDARG;
+
+  *pguidReadClass = CLSID_NULL;
+  return S_OK;
+}
+
+#endif
+
+#if !defined(VEGAS_SDK_FROM_V5)
 
 STDMETHODIMP VegasFS::SetTypeIndex(LONG ixType) {
   m_ixType = ixType;
@@ -161,6 +197,8 @@ STDMETHODIMP VegasFS::GetIOManager(ISfFileIOManager** ppBack) {
 
   return hr;
 }
+
+#endif
 
 STDMETHODIMP VegasFS::GetTypeID(GUID* puuid) {
   HRESULT hr = S_OK;
@@ -214,12 +252,14 @@ STDMETHODIMP VegasFS::GetStrings(const SFFIO_FILECLASS_INFO_TEXT* paStringIds,
     { SFFIO_FILECLASS_TEXT_FileTypeNameEng, L"DebugMode FrameServer" },
     // list of possible file extensions
     { SFFIO_FILECLASS_TEXT_FileExtensions, L"*.avi" },
-    // build type tag (FINAL builds have "" as the tag)
-    { SFFIO_FILECLASS_TEXT_BuildTypeTag, L"" },
     // Localized Type Name (long version)
     { SFFIO_FILECLASS_TEXT_FileTypeNameLocalized, L"DebugMode FrameServer"},
+ #if !defined(VEGAS_SDK_FROM_V5)
     { SFFIO_FILECLASS_TEXT_DialogTitleLocalized, L"DebugMode FrameServer"},
     { SFFIO_FILECLASS_TEXT_CopyrightLocalized, L"Copyright (C) 2000-2019 Satish Kumar. S. All Rights Reserved." },
+    // build type tag (FINAL builds have "" as the tag)
+    { SFFIO_FILECLASS_TEXT_BuildTypeTag, L"" },
+#endif
     { SFFIO_FILECLASS_TEXT_SupportURL, L"http://www.debugmode.com/frameserver/" },
     { SFFIO_FILECLASS_TEXT_SupportURLExplanationLocalized, L"Homepage"}
   };
@@ -342,9 +382,13 @@ STDMETHODIMP VegasFS::AllocateTemplate(PSFTEMPLATEx* ppTemplate,
   return hr;
 }
 
+#if !defined(VEGAS_SDK_FROM_V5)
+
 STDMETHODIMP VegasFS::GetReadClass(ISfReadFileClass** ppReadClass) {
   return E_NOTIMPL;
 }
+
+#endif
 
 STDMETHODIMP VegasFS::GetPreset(PSFTEMPLATEx* ppTemplate,
     LONG ixPreset) {
@@ -568,6 +612,7 @@ STDMETHODIMP VegasFS::GetTemplateInfo(PCSFTEMPLATEx pTemplate,
   return E_NOTIMPL;
 }
 
+#if !defined(VEGAS_SDK_FROM_V5)
 #if defined(VEGAS_SDK_FROM_V3)
 STDMETHODIMP VegasFS::GetTemplateInfoText(PCSFTEMPLATEx pTemplate,
     LPWSTR pszwInfo, 
@@ -575,6 +620,7 @@ STDMETHODIMP VegasFS::GetTemplateInfoText(PCSFTEMPLATEx pTemplate,
     SFFIO_TEMPLATE_INFOTEXT eInfoType) {
   return E_NOTIMPL;
 }
+#endif
 #endif
 
 STDMETHODIMP VegasFS::GetPropertyPageCount(LONG* pcFreePages,
@@ -607,6 +653,8 @@ STDMETHODIMP VegasFS::GetStatus(HRESULT* phrStatus,
   return E_NOTIMPL;
 }
 
+#if !defined(VEGAS_SDK_FROM_V5)
+
 // START: ISfRenderMetaSupport
 
 STDMETHODIMP VegasFS::Reset() {
@@ -633,3 +681,5 @@ STDMETHODIMP VegasFS::GetSupportedTypes(SFFIO_TYPESOFMETADATA* peEmbedded,
     *peExternal = SFFIO_METADATA_NONE;
   return hr;
 }
+
+#endif
